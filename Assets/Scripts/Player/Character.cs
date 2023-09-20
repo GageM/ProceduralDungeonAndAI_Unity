@@ -14,15 +14,18 @@ public class Character : MonoBehaviour
 
     [Header("Character Movement")]
     [SerializeField, Tooltip("How fast the character can Walk")]
-    float walkSpeed;
+    public float walkSpeed;
     [SerializeField, Tooltip("How fast the character can Run")]
-    float runSpeed;
+    public float runSpeed;
     [SerializeField, Tooltip("The speed at which the character jumps")]
     float jumpSpeed;
 
-    float currentSpeed;
-    float moveForward;
-    float moveSide;
+    //[HideInInspector]
+    public float currentSpeed;
+    //[HideInInspector]
+    public float moveForward;
+    //[HideInInspector]
+    public float moveSide;
 
     public bool disableInput = false;
 
@@ -98,19 +101,18 @@ public class Character : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (groundCheck)
+        {
+            isGrounded = Physics.Raycast(groundCheck.position - groundCheck.up * -0.001f, -groundCheck.up, groundCheckDistance);
+
+            Debug.DrawRay(groundCheck.position, -groundCheck.up * groundCheckDistance, Color.cyan);
+        }
 
         if (!disableInput)
         {
             if (Input.GetKeyDown(KeyCode.Q))
             {
                 gameManager.SetGameState(GameState.GameOver);
-            }
-
-            if (groundCheck)
-            {
-                isGrounded = Physics.Raycast(groundCheck.position - groundCheck.up * -0.001f, -groundCheck.up, groundCheckDistance);
-
-                Debug.DrawRay(groundCheck.position, -groundCheck.up * groundCheckDistance, Color.cyan);
             }
 
             if (Input.GetKeyDown(KeyCode.LeftShift))
@@ -141,14 +143,10 @@ public class Character : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (!disableInput)
-        {
             rb.velocity = (transform.forward * moveForward * currentSpeed) + (transform.right * moveSide * currentSpeed) + (transform.up * rb.velocity.y);
-        }
-
     }
 
-    void Jump()
+    public void Jump()
     {
         Debug.Log("Jumping");
 
