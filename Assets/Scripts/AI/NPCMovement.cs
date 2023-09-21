@@ -2,62 +2,66 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Require the character component for movement
-[RequireComponent(typeof(Character))]
+[AddComponentMenu("AI/NPC Movement")]
 
-// Require steering component for movement
+// Require SteeringOutput component for movement
 [RequireComponent (typeof(SteeringOutput))]
-
 
 public class NPCMovement : MonoBehaviour
 {
-    Character character;
-    SteeringOutput steering;
+    SteeringOutput result;
 
     Vector3 velocity;
+    public Vector3 Velocity
+    {
+        get { return velocity; }
+    }
+
     float rotation;
+    public float Rotation
+    {
+        get { return rotation; }
+    }
 
     [SerializeField]
-    float maxKinematicSpeed = 10f;
+    float maxSpeed = 10f;
 
-    [SerializeField]
-    float maxDynamicSpeed = 10f;
-
-    [SerializeField]
+    [SerializeField, Tooltip("Whether this NPC uses Dynamic or Kinematic steering algorithms")]
     public bool isKinematic;
 
     private void Awake()
     {
-        if (!character)
+        if(!result)
         {
-            character = GetComponent<Character>();
-            character.disableInput = true;
-            character.currentSpeed = character.walkSpeed;
-        }
-        if(!steering)
-        {
-            steering = GetComponent<SteeringOutput>();
+            result = GetComponent<SteeringOutput>();
         }
     }
+
     // Update is called once per frame
     void Update()
     {
         if (isKinematic)
         {
-            transform.position += velocity * maxKinematicSpeed * Time.deltaTime;
+            transform.position += velocity * maxSpeed * Time.deltaTime;
             transform.eulerAngles = new Vector3(0f, rotation * Mathf.Rad2Deg, 0f);
         }
         else
         {
-            transform.position += velocity * maxKinematicSpeed * Time.deltaTime;
+            // slow velocity if decelerating
+            if(result.linearAcceleration.magnitude <= 0.001f)
+            {
+                velocity *= 0.95f;
+            }
+
+            transform.position += velocity * Time.deltaTime;
+
             transform.eulerAngles = new Vector3(0f, rotation * Mathf.Rad2Deg, 0f);
 
-            velocity += steering.linearAcceleration * Time.deltaTime;
-            rotation += steering.angularAcceleration * Time.deltaTime;
+            velocity += result.linearAcceleration * Time.deltaTime;
 
-            if(velocity.magnitude > maxDynamicSpeed)
+            if(velocity.magnitude > maxSpeed)
             {
-                velocity = velocity.normalized * maxDynamicSpeed;
+                velocity = velocity.normalized * maxSpeed;
             }
         }
     }
@@ -66,12 +70,12 @@ public class NPCMovement : MonoBehaviour
     {
         if (isKinematic)
         {
-            velocity = steering.velocity;
-            rotation = steering.rotation;
+            velocity = result.velocity;
+            rotation = result.rotation;
         }
         else
         {
-
+            rotation = result.angularAcceleration;
         }
 
     }
