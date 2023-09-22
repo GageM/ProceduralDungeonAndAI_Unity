@@ -6,10 +6,12 @@ using UnityEngine;
 
 // Require SteeringOutput component for movement
 [RequireComponent (typeof(SteeringOutput))]
+[RequireComponent (typeof (Rigidbody))]
 
 public class NPCMovement : MonoBehaviour
 {
     SteeringOutput result;
+    Rigidbody rb;
 
     Vector3 velocity;
     public Vector3 Velocity
@@ -35,6 +37,12 @@ public class NPCMovement : MonoBehaviour
         {
             result = GetComponent<SteeringOutput>();
         }
+        if (!rb)
+        {
+            rb = GetComponent<Rigidbody>();
+            rb.isKinematic = isKinematic;
+            rb.constraints = RigidbodyConstraints.FreezeRotation;
+        }
     }
 
     // Update is called once per frame
@@ -42,27 +50,25 @@ public class NPCMovement : MonoBehaviour
     {
         if (isKinematic)
         {
-            transform.position += velocity * maxSpeed * Time.deltaTime;
+            transform.position += velocity * Time.deltaTime;
             transform.eulerAngles = new Vector3(0f, rotation * Mathf.Rad2Deg, 0f);
+
+            // set this so the velocity can be viewed by other algorithms through the rigidbody
+            rb.velocity = velocity;
         }
         else
         {
             // slow velocity if decelerating
             if(result.linearAcceleration.magnitude <= 0.001f)
             {
-                velocity *= 0.95f;
+                rb.velocity *= 0.95f;
             }
 
-            transform.position += velocity * Time.deltaTime;
+            rb.AddForce(result.linearAcceleration, ForceMode.Acceleration);
 
             transform.eulerAngles = new Vector3(0f, rotation * Mathf.Rad2Deg, 0f);
 
-            velocity += result.linearAcceleration * Time.deltaTime;
-
-            if(velocity.magnitude > maxSpeed)
-            {
-                velocity = velocity.normalized * maxSpeed;
-            }
+            velocity = result.linearAcceleration * Time.deltaTime;
         }
     }
 

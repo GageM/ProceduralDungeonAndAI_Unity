@@ -2,25 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+public enum State
+{
+    NONE = 0,
+    SEEK,
+    FLEE,
+    ARRIVE,
+    AVOID
+}
+
 [AddComponentMenu("AI/Steering")]
-
-
 
 [RequireComponent(typeof(SteeringOutput))]
 [RequireComponent(typeof(NPCMovement))]
+[RequireComponent(typeof(Rigidbody))]
 public class Steering : MonoBehaviour
 {
-    public enum State
-    {
-        NONE = 0,
-        SEEK,
-        FLEE,
-        ARRIVE,
-        AVOID
-    }
-
     SteeringOutput result;
     NPCMovement movement;
+    Rigidbody rb;
 
     bool isKinematic;
 
@@ -30,19 +31,16 @@ public class Steering : MonoBehaviour
     [SerializeField]
     float maxAcceleration = 3.0f;
 
-    [Header("State")]
-    public State state;
-
     // The direction toward the target
     Vector3 direction = Vector3.zero;
     // The distance to the target
     float distance = 0.0f;
 
-    [Header("Target Based Steering")]
-    [SerializeField, Tooltip("The target for the NPC")]
+    [HideInInspector]
     public Transform target;
+    Rigidbody targetRB;
 
-    //[HideInInspector]
+    [HideInInspector]
     public bool arrivedAtTarget = false;
 
     [Header("Arrive and Avoid")]
@@ -67,6 +65,13 @@ public class Steering : MonoBehaviour
     [SerializeField]
     float maxRotation = 1.0f;
 
+    [Header("Obstacle Avoidance")]
+    [SerializeField, Tooltip("The minimum distance to an obstacle")]
+    float avoidDistance = 0.5f;
+
+    [SerializeField, Tooltip("Distance to check for obstacles")]
+    float lookAhead = 2.0f;
+
     private void Awake()
     {
         if(!result)
@@ -78,13 +83,24 @@ public class Steering : MonoBehaviour
             movement = GetComponent<NPCMovement>();
         }
         isKinematic = movement.isKinematic;
+        if (!rb)
+        {
+            rb = GetComponent<Rigidbody>();
+        }
+        targetRB = target.GetComponent<Rigidbody>();
+
     }
 
-    // Update is called once per frame
-    void FixedUpdate()
+    public void GetSteering(State state_, Transform target_)
     {
+        if (target_)
+        {
+            target = target_;
+            targetRB = target_.GetComponent<Rigidbody>();
+        }
+
         // A simple way to switch Steering algorithms in the editor
-        switch(state)
+        switch (state_)
         {
             case State.SEEK:
                 Seek();
@@ -110,13 +126,40 @@ public class Steering : MonoBehaviour
         return LookWhereYouGo();
     }
 
+    public void ClearResult()
+    {
+        result.velocity = Vector3.zero;
+        result.rotation = 0F;
+
+        result.linearAcceleration = Vector3.zero;
+        result.angularAcceleration = 0F;
+    }
+
+    public void ClipValues()
+    {
+        if(isKinematic)
+        {
+            if (result.velocity.magnitude > maxSpeed)
+            {
+                result.velocity = result.velocity.normalized * maxSpeed;
+            }
+        }
+        else
+        {
+            if (result.linearAcceleration.magnitude > maxAcceleration)
+            {
+                result.linearAcceleration = result.linearAcceleration.normalized * maxAcceleration;
+            }
+        }
+    }
+
     private void Seek()
     {
         if (isKinematic)
         {
             direction = target.position - transform.position;
             direction.y = 0;
-            result.velocity = direction.normalized;
+            result.velocity += direction.normalized;
 
             result.rotation = newOrientation();
         }
@@ -124,8 +167,7 @@ public class Steering : MonoBehaviour
         {
             direction = target.position - transform.position;
             direction.y = 0;
-
-            result.linearAcceleration = direction.normalized * maxAcceleration;
+            result.linearAcceleration += direction.normalized * maxAcceleration;
 
             result.angularAcceleration = newOrientation();
 
@@ -138,7 +180,7 @@ public class Steering : MonoBehaviour
         {
             direction = transform.position - target.position;
             direction.y = 0;
-            result.velocity = direction.normalized;
+            result.velocity += direction.normalized;
 
             result.rotation = newOrientation();
         }
@@ -147,7 +189,7 @@ public class Steering : MonoBehaviour
             direction = transform.position - target.position;
             direction.y = 0;
 
-            result.linearAcceleration = direction.normalized * maxAcceleration;
+            result.linearAcceleration += direction.normalized * maxAcceleration;
 
             result.angularAcceleration = newOrientation();
         }
@@ -162,18 +204,13 @@ public class Steering : MonoBehaviour
 
             if (direction.magnitude < arriveTargetRadius)
             {
-                result.velocity = Vector3.zero;
+                result.velocity += Vector3.zero;               
                 arrivedAtTarget = true;
                 return;
             }
 
             result.velocity = direction;
-            result.velocity /= timeToTarget;
 
-            if (result.velocity.magnitude > maxSpeed)
-            {
-                result.velocity = result.velocity.normalized * maxSpeed;
-            }
             result.rotation = newOrientation();
         }
         else
@@ -185,7 +222,7 @@ public class Steering : MonoBehaviour
 
             if (distance < arriveTargetRadius)
             {
-                result.linearAcceleration = Vector3.zero;
+                result.linearAcceleration += Vector3.zero;
                 arrivedAtTarget = true;
                 return;
             }
@@ -203,13 +240,7 @@ public class Steering : MonoBehaviour
 
             Vector3 targetVelocity = direction.normalized * targetSpeed;
 
-            result.linearAcceleration = targetVelocity - movement.Velocity;
-            result.linearAcceleration /= timeToTarget;
-
-            if(result.linearAcceleration.magnitude > maxAcceleration)
-            {
-                result.linearAcceleration = result.linearAcceleration.normalized * maxAcceleration;
-            }
+            result.linearAcceleration += targetVelocity - rb.velocity;
 
             result.angularAcceleration = newOrientation();
         }
@@ -224,17 +255,13 @@ public class Steering : MonoBehaviour
 
             if (direction.magnitude > avoidTargetRadius)
             {
-                result.velocity = Vector3.zero;
+                result.velocity += Vector3.zero;
                 return;
             }
 
             result.velocity = direction;
             result.velocity /= timeToTarget;
 
-            if (result.velocity.magnitude > maxSpeed)
-            {
-                result.velocity = result.velocity.normalized * maxSpeed;
-            }
             result.rotation = newOrientation();
         }
         else
@@ -246,7 +273,7 @@ public class Steering : MonoBehaviour
 
             if (distance > avoidTargetRadius)
             {
-                result.linearAcceleration = Vector3.zero;
+                result.linearAcceleration += Vector3.zero;
                 return;
             }
 
@@ -263,13 +290,8 @@ public class Steering : MonoBehaviour
 
             Vector3 targetVelocity = direction.normalized * targetSpeed;
 
-            result.linearAcceleration = targetVelocity - movement.Velocity;
-            result.linearAcceleration /= timeToTarget;
-
-            if (result.linearAcceleration.magnitude > maxAcceleration)
-            {
-                result.linearAcceleration = result.linearAcceleration.normalized * maxAcceleration;
-            }
+            // 
+            result.linearAcceleration += targetVelocity - rb.velocity;
 
             result.angularAcceleration = newOrientation();
         }
@@ -289,10 +311,48 @@ public class Steering : MonoBehaviour
         }
     }
 
-    //TODO:: Set up LookAtTarget
-    private void LookAtTarget()
+    private void MatchVelocity(Transform target_)
+    {
+        target = target_;
+        targetRB = target.GetComponent<Rigidbody>();
+
+        if(!targetRB)
+        {
+            return;
+        }
+
+        if (isKinematic)
+        {
+            result.velocity = targetRB.velocity;   
+        }
+        else
+        {
+            result.linearAcceleration = targetRB.velocity - rb.velocity;
+            result.linearAcceleration /= timeToTarget;
+
+            if (result.linearAcceleration.magnitude > maxAcceleration)
+            {
+                result.linearAcceleration = result.linearAcceleration.normalized * maxAcceleration;
+            }
+        }
+    }
+
+    private void Align()
     {
 
+    }
+
+    //TODO:: Set up LookAtTarget
+    private float LookAtTarget()
+    {
+        Vector3 direction = target.position - transform.position;
+        direction.y = 0.0f;
+
+        if (direction.magnitude > 0f)
+        {
+            return Mathf.Atan2(direction.x, direction.z);
+        }
+        return 0;
     }
 
     //TODO:: Set up LookWhereYouGo
@@ -309,9 +369,9 @@ public class Steering : MonoBehaviour
         else
         {
 
-            if (movement.Velocity.magnitude > 0f)
+            if (rb.velocity.magnitude > 0f)
             {
-                return Mathf.Atan2(movement.Velocity.x, movement.Velocity.z);
+                return Mathf.Atan2(rb.velocity.x, rb.velocity.z);
             }
             return 0;
         }

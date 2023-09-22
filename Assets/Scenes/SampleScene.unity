@@ -689,7 +689,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 986289c327c85e14796ffb76e6c6209d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -956,7 +956,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 0cceed381164cab44adcd51ed03193dd, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1017,7 +1017,7 @@ GameObject:
   - component: {fileID: 764455778}
   - component: {fileID: 764455777}
   - component: {fileID: 764455776}
-  - component: {fileID: 764455786}
+  - component: {fileID: 764455787}
   m_Layer: 0
   m_Name: NPC
   m_TagString: Untagged
@@ -1055,15 +1055,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSpeed: 3
   maxAcceleration: 1
-  state: 4
   target: {fileID: 659389629}
   arrivedAtTarget: 0
-  timeToTarget: 0.1
+  timeToTarget: 0.25
   arriveTargetRadius: 2
   arriveSlowRadius: 5
   avoidTargetRadius: 10
   avoidSlowRadius: 7
   maxRotation: 1
+  avoidDistance: 0.5
+  lookAhead: 2
 --- !u!114 &764455778
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1090,7 +1091,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 0
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
@@ -1128,7 +1129,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 0cceed381164cab44adcd51ed03193dd, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1175,22 +1176,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
---- !u!114 &764455786
+--- !u!114 &764455787
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 764455775}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2c5e421601a34fc419272c72739d7556, type: 3}
+  m_Script: {fileID: 11500000, guid: c07ca1e976048124bb2eec4669f64cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  states: 040000000400000004000000
   targets:
-  - {fileID: 659389629}
-  - {fileID: 476717379}
   - {fileID: 1321820040}
+  - {fileID: 476717379}
+  - {fileID: 659389629}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -1278,7 +1280,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 986289c327c85e14796ffb76e6c6209d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
