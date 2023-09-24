@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 
 [RequireComponent(typeof(Collider))]
@@ -12,20 +13,32 @@ public class Character : MonoBehaviour
     Rigidbody rb;
     Animator animator;
 
+    // Inputs
+    [Header("Inputs")]
+    public InputActionAsset controls;
+
+    // Private actions for easy reference
+    InputAction moveAction;
+    InputAction jumpAction;
+    InputAction interactAction;
+    InputAction sprintAction;
+    InputAction quitAction;
+
     [Header("Character Movement")]
     [SerializeField, Tooltip("How fast the character can Walk")]
-    public float walkSpeed;
+    public float maxWalkSpeed;
     [SerializeField, Tooltip("How fast the character can Run")]
-    public float runSpeed;
-    [SerializeField, Tooltip("The speed at which the character jumps")]
-    float jumpSpeed;
+    public float maxRunSpeed;
+    [SerializeField, Tooltip("How fast the character accelerates")]
+    public float maxAcceleration;
 
-    //[HideInInspector]
-    public float currentSpeed;
-    //[HideInInspector]
-    public float moveForward;
-    //[HideInInspector]
-    public float moveSide;
+    [SerializeField, Tooltip("The speed at which the character jumps")]
+    float jumpHeight;
+
+        [HideInInspector]
+    public float maxSpeed;
+
+    public Vector3 move;
 
     public bool disableInput = false;
 
@@ -50,6 +63,19 @@ public class Character : MonoBehaviour
     private void Awake()
     {
         gameManager = GameManager.Instance;
+
+        // Set up input actions
+        moveAction = controls.FindActionMap("MainControls").FindAction("Move");
+        jumpAction = controls.FindActionMap("MainControls").FindAction("Jump");
+        interactAction = controls.FindActionMap("MainControls").FindAction("Interact");
+        sprintAction = controls.FindActionMap("MainControls").FindAction("Sprint");
+        quitAction = controls.FindActionMap("MainControls").FindAction("Quit");
+
+        // Set the functions that each action calls
+        jumpAction.performed += Jump;
+        sprintAction.canceled += Sprint;
+        sprintAction.performed += Sprint;
+        quitAction.performed += Quit;
     }
 
     // Start is called before the first frame update
@@ -62,25 +88,34 @@ public class Character : MonoBehaviour
         }
 
         // Initialize unset variables
-        if(walkSpeed <= 0)
+        if(maxWalkSpeed <= 0)
         {
-            walkSpeed = 5f;
+            maxWalkSpeed = 5f;
 
-            Debug.Log(name + ": walkSpeed not set, defaulting to " + walkSpeed);
+            Debug.Log(name + ": maxWalkSpeed not set, defaulting to " + maxWalkSpeed);
         }
 
-        if (runSpeed <= 0)
+        if (maxRunSpeed <= 0)
         {
-            runSpeed = 8f;
+            maxRunSpeed = 8f;
 
-            Debug.Log(name + ": runSpeed not set, defaulting to " + runSpeed);
+            Debug.Log(name + ": maxRunSpeed not set, defaulting to " + maxRunSpeed);
         }
 
-        if (jumpSpeed <= 0)
-        {
-            runSpeed = 8f;
+        maxSpeed = maxWalkSpeed;
 
-            Debug.Log(name + ": jumpSpeed not set, defaulting to " + jumpSpeed);
+        if (maxAcceleration <= 0)
+        {
+            maxAcceleration = 15f;
+
+            Debug.Log(name + ": maxAcceleration not set, defaulting to " + maxAcceleration);
+        }
+
+        if (jumpHeight <= 0)
+        {
+            jumpHeight = 8f;
+
+            Debug.Log(name + ": jumpHeight not set, defaulting to " + jumpHeight);
         }
 
         if (!groundCheck)
@@ -108,49 +143,62 @@ public class Character : MonoBehaviour
             Debug.DrawRay(groundCheck.position, -groundCheck.up * groundCheckDistance, Color.cyan);
         }
 
-        if (!disableInput)
-        {
-            if (Input.GetKeyDown(KeyCode.Q))
-            {
-                gameManager.SetGameState(GameState.GameOver);
-            }
+        animator.SetFloat("Y", move.y);
+        animator.SetFloat("X", move.x);
 
-            if (Input.GetKeyDown(KeyCode.LeftShift))
-            {
-                if (currentSpeed != runSpeed)
-                {
-                    currentSpeed = runSpeed;
-                }
-            }
-            else
-            {
-                currentSpeed = walkSpeed;
-            }
-
-            moveForward = Input.GetAxis("Vertical");
-            moveSide = Input.GetAxis("Horizontal");
-
-            if (isGrounded && Input.GetButtonDown("Jump"))
-            {
-                Jump();
-            }
-
-            animator.SetFloat("Y", moveForward);
-            animator.SetFloat("X", moveSide);
-        }
     }
-
 
     void FixedUpdate()
     {
-            rb.velocity = (transform.forward * moveForward * currentSpeed) + (transform.right * moveSide * currentSpeed) + (transform.up * rb.velocity.y);
+        if (!disableInput)
+        {
+            move.z = moveAction.ReadValue<Vector2>().y;
+            move.x = moveAction.ReadValue<Vector2>().x;
+
+            Vector3 localMove = (transform.forward * move.z) + (transform.right * move.x);
+
+            // Accelerate character
+            rb.AddForce(localMove * maxAcceleration, ForceMode.Acceleration);
+
+            // Clamp max speed
+            if(rb.velocity.magnitude > maxSpeed)
+            {
+                rb.velocity = rb.velocity.normalized * maxSpeed;
+            }
+        }
     }
 
-    public void Jump()
+    void Jump(InputAction.CallbackContext context)
     {
-        Debug.Log("Jumping");
+        if (isGrounded)
+        {
+            Debug.Log("Jumping");
 
-        rb.AddForce(transform.up * jumpSpeed, ForceMode.Impulse);
+            rb.AddForce(transform.up * jumpHeight, ForceMode.Impulse);
+        }
+    }
+
+    void Sprint(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            maxSpeed = maxRunSpeed;
+        }
+        if(context.canceled)
+        {
+            maxSpeed = maxWalkSpeed;
+        }
+    }
+
+    void Quit(InputAction.CallbackContext context)
+    {
+        gameManager.SetGameState(GameState.GameOver);
+        Application.Quit();
+    }
+
+    void Interact(InputAction.CallbackContext context)
+    {
+
     }
 
 }
