@@ -27,6 +27,10 @@ public class NPCMovement : MonoBehaviour
 
     [SerializeField]
     float maxSpeed = 10f;
+    public float MaxSpeed 
+    {
+        get { return maxSpeed; }
+    }
 
     [SerializeField, Tooltip("Whether this NPC uses Dynamic or Kinematic steering algorithms")]
     public bool isKinematic;

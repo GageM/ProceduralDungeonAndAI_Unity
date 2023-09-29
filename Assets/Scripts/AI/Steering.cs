@@ -9,7 +9,9 @@ public enum State
     SEEK,
     FLEE,
     ARRIVE,
-    AVOID
+    AVOID,
+    PURSUE,
+    EVADE
 }
 
 [AddComponentMenu("AI/Steering")]
@@ -36,8 +38,6 @@ public class Steering : MonoBehaviour
     // The distance to the target
     float distance = 0.0f;
 
-    [HideInInspector]
-    public Transform target;
     Rigidbody targetRB;
 
     [HideInInspector]
@@ -87,32 +87,30 @@ public class Steering : MonoBehaviour
         {
             rb = GetComponent<Rigidbody>();
         }
-        targetRB = target.GetComponent<Rigidbody>();
-
     }
 
     public void GetSteering(State state_, Transform target_)
     {
-        if (target_)
-        {
-            target = target_;
-            targetRB = target_.GetComponent<Rigidbody>();
-        }
-
         // A simple way to switch Steering algorithms in the editor
         switch (state_)
         {
             case State.SEEK:
-                Seek();
+                Seek(target_.position);
                 break;
             case State.FLEE:
-                Flee();
+                Flee(target_.position);
                 break;
             case State.ARRIVE:
-                Arrive();
+                Arrive(target_.position);
                 break;
             case State.AVOID:
-                Avoid();
+                Avoid(target_.position);
+                break;
+            case State.PURSUE:
+                Pursue(target_);
+                break;
+            case State.EVADE:
+                Evade(target_);
                 break;
             case State.NONE:
                 break;
@@ -153,11 +151,11 @@ public class Steering : MonoBehaviour
         }
     }
 
-    private void Seek()
+    private void Seek(Vector3 targetPos)
     {
         if (isKinematic)
         {
-            direction = target.position - transform.position;
+            direction = targetPos - transform.position;
             direction.y = 0;
             result.velocity += direction.normalized;
 
@@ -165,7 +163,7 @@ public class Steering : MonoBehaviour
         }
         else
         {
-            direction = target.position - transform.position;
+            direction = targetPos - transform.position;
             direction.y = 0;
             result.linearAcceleration += direction.normalized * maxAcceleration;
 
@@ -174,11 +172,11 @@ public class Steering : MonoBehaviour
         }
     }
 
-    private void Flee()
+    private void Flee(Vector3 targetPos)
     {
         if (isKinematic)
         {
-            direction = transform.position - target.position;
+            direction = transform.position - targetPos;
             direction.y = 0;
             result.velocity += direction.normalized;
 
@@ -186,7 +184,7 @@ public class Steering : MonoBehaviour
         }
         else
         {
-            direction = transform.position - target.position;
+            direction = transform.position - targetPos;
             direction.y = 0;
 
             result.linearAcceleration += direction.normalized * maxAcceleration;
@@ -195,11 +193,11 @@ public class Steering : MonoBehaviour
         }
     }
 
-    private void Arrive()
+    private void Arrive(Vector3 targetPos)
     {
         if (isKinematic)
         {
-            direction = target.position - transform.position;
+            direction = targetPos - transform.position;
             direction.y = 0;
 
             if (direction.magnitude < arriveTargetRadius)
@@ -215,7 +213,7 @@ public class Steering : MonoBehaviour
         }
         else
         {
-            direction = target.position - transform.position;
+            direction = targetPos - transform.position;
             direction.y = 0.0f;
 
             distance = direction.magnitude;
@@ -246,11 +244,11 @@ public class Steering : MonoBehaviour
         }
     }
 
-    private void Avoid()
+    private void Avoid(Vector3 targetPos)
     {
         if (isKinematic)
         {
-            direction = transform.position - target.position;
+            direction = transform.position - targetPos;
             direction.y = 0;
 
             if (direction.magnitude > avoidTargetRadius)
@@ -266,7 +264,7 @@ public class Steering : MonoBehaviour
         }
         else
         {
-            direction = transform.position - target.position;
+            direction = transform.position - targetPos;
             direction.y = 0.0f;
 
             distance = direction.magnitude;
@@ -313,8 +311,7 @@ public class Steering : MonoBehaviour
 
     private void MatchVelocity(Transform target_)
     {
-        target = target_;
-        targetRB = target.GetComponent<Rigidbody>();
+        targetRB = target_.GetComponent<Rigidbody>();
 
         if(!targetRB)
         {
@@ -337,15 +334,16 @@ public class Steering : MonoBehaviour
         }
     }
 
+    //TODO:: Set up Align
     private void Align()
     {
 
     }
 
     //TODO:: Set up LookAtTarget
-    private float LookAtTarget()
+    private float LookAtTarget(Transform target_)
     {
-        Vector3 direction = target.position - transform.position;
+        Vector3 direction = target_.position - transform.position;
         direction.y = 0.0f;
 
         if (direction.magnitude > 0f)
@@ -375,5 +373,65 @@ public class Steering : MonoBehaviour
             }
             return 0;
         }
+    }
+
+    private void Pursue(Transform target_)
+    {
+        targetRB = target_.GetComponent<Rigidbody>();
+        Vector3 targetPos = target_.position;
+
+        float prediction;
+        float maxPrediction = movement.MaxSpeed;
+
+        if(targetRB)
+        {
+            Vector3 dir = target_.position - transform.position;
+            float distance = dir.magnitude;
+
+            float tarSpeed = targetRB.velocity.magnitude;
+
+            if(tarSpeed <= (distance/maxPrediction))
+            {
+                prediction = maxPrediction;
+            }
+            else
+            {
+                prediction = distance/tarSpeed;
+            }
+
+            targetPos += targetRB.velocity * prediction;
+        }
+
+        Arrive(targetPos);
+    }
+
+    private void Evade(Transform target_)
+    {
+        targetRB = target_.GetComponent<Rigidbody>();
+        Vector3 targetPos = target_.position;
+
+        float prediction;
+        float maxPrediction = movement.MaxSpeed;
+
+        if (targetRB)
+        {
+            Vector3 dir = transform.position - target_.position;
+            float distance = dir.magnitude;
+
+            float tarSpeed = targetRB.velocity.magnitude;
+
+            if (tarSpeed <= (distance / maxPrediction))
+            {
+                prediction = maxPrediction;
+            }
+            else
+            {
+                prediction = distance / tarSpeed;
+            }
+
+            targetPos += targetRB.velocity * prediction;
+        }
+
+        Avoid(targetPos);
     }
 }

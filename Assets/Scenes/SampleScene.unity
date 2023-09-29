@@ -535,8 +535,8 @@ MonoBehaviour:
   controls: {fileID: -944628639613478452, guid: 37a278715461aec41ae4d4786db964ea,
     type: 3}
   axes: 2
-  sensitivityX: 2
-  sensitivityY: 2
+  sensitivityX: 0.7
+  sensitivityY: 0.7
   minimumX: -360
   maximumX: 360
   minimumY: -60
@@ -768,7 +768,7 @@ Transform:
   m_GameObject: {fileID: 476717376}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.93, y: 3, z: 24.21}
+  m_LocalPosition: {x: -2.72, y: 3, z: 1.18}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -813,8 +813,8 @@ MonoBehaviour:
   controls: {fileID: -944628639613478452, guid: 37a278715461aec41ae4d4786db964ea,
     type: 3}
   axes: 1
-  sensitivityX: 2
-  sensitivityY: 2
+  sensitivityX: 0.7
+  sensitivityY: 0.7
   minimumX: -360
   maximumX: 360
   minimumY: -60
@@ -1200,7 +1200,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSpeed: 3
   maxAcceleration: 1
-  target: {fileID: 659389629}
   arrivedAtTarget: 0
   timeToTarget: 0.25
   arriveTargetRadius: 2
@@ -1353,11 +1352,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c07ca1e976048124bb2eec4669f64cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  states: 040000000400000004000000
+  states: 050000000400000004000000
   targets:
-  - {fileID: 1321820040}
+  - {fileID: 488886081}
   - {fileID: 476717379}
-  - {fileID: 659389629}
+  - {fileID: 1321820040}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
