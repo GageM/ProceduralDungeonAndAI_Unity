@@ -6,12 +6,10 @@ using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Collider))]
 [RequireComponent(typeof(Rigidbody))]
-//[RequireComponent(typeof(Animator))]
 public class Character : MonoBehaviour
 {
     GameManager gameManager;
     Rigidbody rb;
-    Animator animator;
 
     // Inputs
     [Header("Inputs")]
@@ -56,9 +54,9 @@ public class Character : MonoBehaviour
 
 
     // The Ground Layer is layer 3
-    int groundLayerMask = 1 << 3;
+    //int groundLayerMask = 1 << 3;
     // The Enemy Layer is Layer 6
-    int enemyLayerMask = 1 << 6;
+    //int enemyLayerMask = 1 << 6;
 
     private void Awake()
     {
@@ -129,8 +127,6 @@ public class Character : MonoBehaviour
 
             Debug.Log(name + ": groundCheckDistance not set, defaulting to " + groundCheckDistance);
         }
-
-        animator = GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
@@ -142,10 +138,6 @@ public class Character : MonoBehaviour
 
             Debug.DrawRay(groundCheck.position, -groundCheck.up * groundCheckDistance, Color.cyan);
         }
-
-        animator.SetFloat("Y", move.y);
-        animator.SetFloat("X", move.x);
-
     }
 
     void FixedUpdate()

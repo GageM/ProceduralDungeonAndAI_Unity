@@ -1200,13 +1200,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSpeed: 3
   maxAcceleration: 1
+  maxRotation: 45
+  maxAngularAcceleration: 360
   arrivedAtTarget: 0
   timeToTarget: 0.25
   arriveTargetRadius: 2
   arriveSlowRadius: 5
   avoidTargetRadius: 10
   avoidSlowRadius: 7
-  maxRotation: 1
+  alignTargetRadius: 10
+  alignSlowRadius: 7
   avoidDistance: 0.5
   lookAhead: 2
 --- !u!114 &764455778
@@ -1221,7 +1224,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50895c5a29504924b926cf0625d3b2b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 10
   isKinematic: 0
 --- !u!54 &764455781
 Rigidbody:
@@ -1352,11 +1354,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c07ca1e976048124bb2eec4669f64cc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  states: 050000000400000004000000
-  targets:
-  - {fileID: 488886081}
+  moveStates: 030000000400000004000000
+  Movetargets:
+  - {fileID: 659389629}
   - {fileID: 476717379}
   - {fileID: 1321820040}
+  lookState: 1
+  lookTarget: {fileID: 659389629}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0

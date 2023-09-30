@@ -5,7 +5,7 @@ using UnityEngine;
 public enum GameState { NullState, Intro, MainMenu, Game, GameOver };
 public delegate void OnStateChangeHandler();
 
-public class GameManager : MonoBehaviour
+public class GameManager
 {
     static GameManager _instance = null; 
     public event OnStateChangeHandler OnStateChange;

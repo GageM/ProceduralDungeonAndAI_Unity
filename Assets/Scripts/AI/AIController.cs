@@ -10,10 +10,16 @@ public class AIController : MonoBehaviour
     Steering steering;
 
     [SerializeField, Tooltip("A list of Steering Algorithms for each target in 'targets'")]
-    List<State> states;
+    List<MoveState> moveStates;
 
     [SerializeField, Tooltip("A list of targets for the steering algorithms")]
-    List<Transform> targets;
+    List<Transform> Movetargets;
+
+    [SerializeField, Tooltip("The Look Steering Algorithm to use")]
+    LookState lookState;
+
+    [SerializeField, Tooltip("The focus for 'lookAtTarget' steering")]
+    Transform lookTarget;
 
     // Start is called before the first frame update
     void Awake()
@@ -29,10 +35,11 @@ public class AIController : MonoBehaviour
     {
         steering.ClearResult();
         // Run the steering algorithms
-        for (int i = 0; i < states.Count; i++)
+        for (int i = 0; i < moveStates.Count; i++)
         {
-            steering.GetSteering(states[i], targets[i]);
+            steering.GetMovementSteering(moveStates[i], Movetargets[i]);
         }
+        steering.GetLookSteering(lookState, lookTarget.position);
         steering.ClipValues();
     }
 }

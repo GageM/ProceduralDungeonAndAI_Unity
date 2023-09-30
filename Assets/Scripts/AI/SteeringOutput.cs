@@ -7,7 +7,7 @@ public class SteeringOutput : MonoBehaviour
 {
     // For Kinematic Steering
     public Vector3 velocity = Vector3.zero;
-    public float rotation = 0f;
+    public float rotation = 90f;
 
     // For Dynamic Steering
     public Vector3 linearAcceleration = Vector3.zero;

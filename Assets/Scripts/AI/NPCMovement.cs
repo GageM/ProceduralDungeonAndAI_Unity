@@ -13,25 +13,6 @@ public class NPCMovement : MonoBehaviour
     SteeringOutput result;
     Rigidbody rb;
 
-    Vector3 velocity;
-    public Vector3 Velocity
-    {
-        get { return velocity; }
-    }
-
-    float rotation;
-    public float Rotation
-    {
-        get { return rotation; }
-    }
-
-    [SerializeField]
-    float maxSpeed = 10f;
-    public float MaxSpeed 
-    {
-        get { return maxSpeed; }
-    }
-
     [SerializeField, Tooltip("Whether this NPC uses Dynamic or Kinematic steering algorithms")]
     public bool isKinematic;
 
@@ -54,11 +35,8 @@ public class NPCMovement : MonoBehaviour
     {
         if (isKinematic)
         {
-            transform.position += velocity * Time.deltaTime;
-            transform.eulerAngles = new Vector3(0f, rotation * Mathf.Rad2Deg, 0f);
-
-            // set this so the velocity can be viewed by other algorithms through the rigidbody
-            rb.velocity = velocity;
+            transform.position += result.velocity * Time.deltaTime;
+            transform.eulerAngles = new Vector3(0f, result.rotation, 0f);
         }
         else
         {
@@ -70,23 +48,7 @@ public class NPCMovement : MonoBehaviour
 
             rb.AddForce(result.linearAcceleration, ForceMode.Acceleration);
 
-            transform.eulerAngles = new Vector3(0f, rotation * Mathf.Rad2Deg, 0f);
-
-            velocity = result.linearAcceleration * Time.deltaTime;
+            transform.eulerAngles += new Vector3(0f, result.angularAcceleration * Time.deltaTime, 0f);
         }
-    }
-
-    private void FixedUpdate()
-    {
-        if (isKinematic)
-        {
-            velocity = result.velocity;
-            rotation = result.rotation;
-        }
-        else
-        {
-            rotation = result.angularAcceleration;
-        }
-
     }
 }
