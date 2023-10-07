@@ -40,6 +40,7 @@ public class AIController : MonoBehaviour
             steering.GetMovementSteering(moveStates[i], Movetargets[i]);
         }
         steering.GetLookSteering(lookState, lookTarget.position);
-        steering.ClipValues();
+        steering.ObstacleAvoidance();
+        steering.CalculateOutput();
     }
 }

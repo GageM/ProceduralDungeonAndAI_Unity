@@ -24,12 +24,14 @@ public enum LookState
 
 [AddComponentMenu("AI/Steering")]
 
-[RequireComponent(typeof(SteeringOutput))]
 [RequireComponent(typeof(NPCMovement))]
 [RequireComponent(typeof(Rigidbody))]
 public class Steering : MonoBehaviour
 {
-    SteeringOutput result;
+    public List<SteeringOutput> results;
+
+    public SteeringOutput output;
+
     NPCMovement movement;
     Rigidbody rb;
 
@@ -82,18 +84,19 @@ public class Steering : MonoBehaviour
 
     [Header("Obstacle Avoidance")]
     [SerializeField, Tooltip("The minimum distance to an obstacle")]
-    float avoidDistance = 0.5f;
+    float avoidDistance = 2.0f;
 
     [SerializeField, Tooltip("Distance to check for obstacles")]
-    float lookAhead = 2.0f;
+    float lookAhead = 5.0f;
+
+    [SerializeField, Tooltip("The 'Whisker' angle")]
+    float whiskerAngle = 90f;
 
     private void Awake()
     {
-        if(!result)
-        {
-            result = GetComponent<SteeringOutput>();
-        }
-        if(!movement)
+        results = new List<SteeringOutput>();
+        output = new SteeringOutput();
+        if (!movement)
         {
             movement = GetComponent<NPCMovement>();
         }
@@ -104,7 +107,7 @@ public class Steering : MonoBehaviour
         }
     }
 
-    public void GetMovementSteering(MoveState moveState_,Transform target_)
+    public void GetMovementSteering(MoveState moveState_, Transform target_)
     {
         // Controls The Movement Steering Of The NPC
         switch (moveState_)
@@ -156,58 +159,87 @@ public class Steering : MonoBehaviour
 
     public void ClearResult()
     {
-        result.velocity = Vector3.zero;
-        result.rotation = 0F;
+        results.Clear();
+        output.velocity = Vector3.zero;
+        output.linearAcceleration = Vector3.zero;
 
-        result.linearAcceleration = Vector3.zero;
-        result.angularAcceleration = 0F;
+        output.rotation = 0.0f;
+        output.angularAcceleration = 0.0f;
     }
 
     public void ClipValues()
     {
-        if(isKinematic)
+        if (isKinematic)
         {
-            if (result.velocity.magnitude > maxSpeed)
+            if (output.velocity.magnitude > maxSpeed)
             {
-                result.velocity = result.velocity.normalized * maxSpeed;
+                output.velocity = output.velocity.normalized * maxSpeed;
             }
         }
         else
         {
-            if (result.linearAcceleration.magnitude > maxAcceleration)
+            if (output.linearAcceleration.magnitude > maxAcceleration)
             {
-                result.linearAcceleration = result.linearAcceleration.normalized * maxAcceleration;
-            }
+                output.linearAcceleration = output.linearAcceleration.normalized * maxAcceleration;
+                float angularAcceleration = Mathf.Abs(output.angularAcceleration);
 
-            float angularAcceleration = Mathf.Abs(result.angularAcceleration);
-
-            if (angularAcceleration > maxAngularAcceleration)
-            {
-                result.angularAcceleration /= angularAcceleration;
-                result.angularAcceleration *= maxAngularAcceleration;
+                if (angularAcceleration > maxAngularAcceleration)
+                {
+                    output.angularAcceleration /= angularAcceleration;
+                    output.angularAcceleration *= maxAngularAcceleration;
+                }
             }
         }
     }
-
-    private void Seek(Vector3 targetPos)
+    public void CalculateOutput()
     {
+        float totalWeight = 0.0f;
+        foreach (var result in results)
+        {
+            totalWeight += result.weight;
+        }
+
+        foreach (var result in results)
+        {
+            result.weight /= totalWeight;
+
+            if (result.weight > 0.1f)
+            {
+                output.velocity += result.velocity * result.weight;
+                output.rotation += result.rotation * result.weight;
+
+                output.linearAcceleration += result.linearAcceleration * result.weight;
+                output.angularAcceleration += result.angularAcceleration * result.weight;
+            }
+        }
+
+        output.weight = 1.0f;
+        ClipValues();
+    }
+
+    private void Seek(Vector3 targetPos, float weight = 1.0f)
+    {
+        SteeringOutput result = new SteeringOutput();
+        result.weight = weight;
         if (isKinematic)
         {
             direction = targetPos - transform.position;
             direction.y = 0;
-            result.velocity += direction.normalized;
+            result.velocity = direction.normalized;
         }
         else
         {
             direction = targetPos - transform.position;
             direction.y = 0;
-            result.linearAcceleration += direction.normalized * maxAcceleration;
-
+            result.linearAcceleration = direction.normalized * maxAcceleration;
+            results.Add(result);
         }
     }
 
-    private void Flee(Vector3 targetPos)
+    private void Flee(Vector3 targetPos, float weight = 1.0f)
     {
+        SteeringOutput result = new SteeringOutput();
+        result.weight = weight;
         if (isKinematic)
         {
             direction = transform.position - targetPos;
@@ -219,12 +251,15 @@ public class Steering : MonoBehaviour
             direction = transform.position - targetPos;
             direction.y = 0;
 
-            result.linearAcceleration += direction.normalized * maxAcceleration;
+            result.linearAcceleration = direction.normalized * maxAcceleration;
         }
+        results.Add(result);
     }
 
-    private void Arrive(Vector3 targetPos)
+    private void Arrive(Vector3 targetPos, float weight = 1.0f)
     {
+        SteeringOutput result = new SteeringOutput();
+        result.weight = weight;
         if (isKinematic)
         {
             direction = targetPos - transform.position;
@@ -232,8 +267,9 @@ public class Steering : MonoBehaviour
 
             if (direction.magnitude < arriveTargetRadius)
             {
-                result.velocity += Vector3.zero;               
+                result.velocity = Vector3.zero;
                 arrivedAtTarget = true;
+                results.Add(result);
                 return;
             }
 
@@ -248,14 +284,15 @@ public class Steering : MonoBehaviour
 
             if (distance < arriveTargetRadius)
             {
-                result.linearAcceleration += Vector3.zero;
+                result.linearAcceleration = Vector3.zero;
                 arrivedAtTarget = true;
+                results.Add(result);
                 return;
             }
 
             float targetSpeed;
 
-            if(distance > arriveSlowRadius)
+            if (distance > arriveSlowRadius)
             {
                 targetSpeed = maxSpeed;
             }
@@ -266,12 +303,15 @@ public class Steering : MonoBehaviour
 
             Vector3 targetVelocity = direction.normalized * targetSpeed;
 
-            result.linearAcceleration += targetVelocity - rb.velocity;
+            result.linearAcceleration = targetVelocity - rb.velocity;
         }
+        results.Add(result);
     }
 
-    private void Avoid(Vector3 targetPos)
+    private void Avoid(Vector3 targetPos, float weight = 1.0f)
     {
+        SteeringOutput result = new SteeringOutput();
+        result.weight = weight;
         if (isKinematic)
         {
             direction = transform.position - targetPos;
@@ -279,7 +319,8 @@ public class Steering : MonoBehaviour
 
             if (direction.magnitude > avoidTargetRadius)
             {
-                result.velocity += Vector3.zero;
+                result.velocity = Vector3.zero;
+                results.Add(result);
                 return;
             }
 
@@ -295,7 +336,8 @@ public class Steering : MonoBehaviour
 
             if (distance > avoidTargetRadius)
             {
-                result.linearAcceleration += Vector3.zero;
+                result.linearAcceleration = Vector3.zero;
+                results.Add(result);
                 return;
             }
 
@@ -313,14 +355,16 @@ public class Steering : MonoBehaviour
             Vector3 targetVelocity = direction.normalized * targetSpeed;
 
             // 
-            result.linearAcceleration += targetVelocity - rb.velocity;
+            result.linearAcceleration = targetVelocity - rb.velocity;
         }
+        results.Add(result);
     }
 
     //TODO:: Work on Wander Algorithm
     private void Wander()
     {
-        if(isKinematic)
+        SteeringOutput result = new SteeringOutput();
+        if (isKinematic)
         {
             result.velocity = new Vector3(Mathf.Cos(result.rotation), 0.0f, Mathf.Sin(result.rotation)) * maxSpeed;
 
@@ -329,20 +373,22 @@ public class Steering : MonoBehaviour
 
             return;
         }
+        results.Add(result);
     }
 
     private void MatchVelocity(Transform target_)
     {
+        SteeringOutput result = new SteeringOutput();
         targetRB = target_.GetComponent<Rigidbody>();
 
-        if(!targetRB)
+        if (!targetRB)
         {
             return;
         }
 
         if (isKinematic)
         {
-            result.velocity = targetRB.velocity;   
+            result.velocity = targetRB.velocity;
         }
         else
         {
@@ -354,12 +400,13 @@ public class Steering : MonoBehaviour
                 result.linearAcceleration = result.linearAcceleration.normalized * maxAcceleration;
             }
         }
+        results.Add(result);
     }
 
-    //TODO:: Set up Align
     private void Align(float targetOrientation)
     {
-        if(isKinematic)
+        SteeringOutput result = new SteeringOutput();
+        if (isKinematic)
         {
             // Set the rotation to be the target rotation
             result.rotation = targetOrientation;
@@ -384,8 +431,9 @@ public class Steering : MonoBehaviour
             targetRotation *= rotation / rotationSize;
 
             result.angularAcceleration = targetRotation;
-            result.angularAcceleration /= timeToTarget;            
+            result.angularAcceleration /= timeToTarget;
         }
+        results.Add(result);
     }
 
     float MapAngleToRange(float angle)
@@ -397,7 +445,6 @@ public class Steering : MonoBehaviour
         return r;
     }
 
-    //TODO:: Set up LookAtTarget
     private void LookAtTarget(Vector3 target_)
     {
         Vector3 direction = target_ - transform.position;
@@ -410,16 +457,15 @@ public class Steering : MonoBehaviour
         return;
     }
 
-    //TODO:: Set up LookWhereYouGo
     private void LookWhereYouGo()
     {
-        if(isKinematic && result.velocity.magnitude > 0.2f) Align(Mathf.Atan2(result.velocity.x, result.velocity.z) * Mathf.Rad2Deg);
+        if (isKinematic && output.velocity.magnitude > 0.2f) Align(Mathf.Atan2(output.velocity.x, output.velocity.z) * Mathf.Rad2Deg);
         else if (rb.velocity.magnitude > 0.2f) Align(Mathf.Atan2(rb.velocity.x, rb.velocity.z) * Mathf.Rad2Deg);
 
         return;
     }
 
-    private void Pursue(Transform target_)
+    private void Pursue(Transform target_, float weight = 1)
     {
         targetRB = target_.GetComponent<Rigidbody>();
         Vector3 targetPos = target_.position;
@@ -427,29 +473,29 @@ public class Steering : MonoBehaviour
         float prediction;
         float maxPrediction = maxSpeed;
 
-        if(targetRB)
+        if (targetRB)
         {
             Vector3 dir = target_.position - transform.position;
             float distance = dir.magnitude;
 
             float tarSpeed = targetRB.velocity.magnitude;
 
-            if(tarSpeed <= (distance/maxPrediction))
+            if (tarSpeed <= (distance / maxPrediction))
             {
                 prediction = maxPrediction;
             }
             else
             {
-                prediction = distance/tarSpeed;
+                prediction = distance / tarSpeed;
             }
 
-            targetPos += targetRB.velocity * prediction;
+            targetPos += weight * (targetRB.velocity * prediction);
         }
 
-        Arrive(targetPos);
+        Arrive(targetPos, weight);
     }
 
-    private void Evade(Transform target_)
+    private void Evade(Transform target_, float weight = 1)
     {
         targetRB = target_.GetComponent<Rigidbody>();
         Vector3 targetPos = target_.position;
@@ -473,9 +519,124 @@ public class Steering : MonoBehaviour
                 prediction = distance / tarSpeed;
             }
 
-            targetPos += targetRB.velocity * prediction;
+            targetPos += weight * (targetRB.velocity * prediction);
         }
 
-        Avoid(targetPos);
+        Avoid(targetPos, weight);
+    }
+
+    public void ObstacleAvoidance(float weight = 3)
+    {
+        Ray ray = new Ray(transform.position + Vector3.up * 0.5f + transform.forward * 0.8f, transform.forward);
+        RaycastHit forwardHit;
+
+        Vector3 leftWhiskerForward = Quaternion.AngleAxis(-whiskerAngle, Vector3.up) * transform.forward;
+        Ray leftRay = new Ray(transform.position + Vector3.up * 0.5f + leftWhiskerForward * 0.8f, leftWhiskerForward);
+        RaycastHit leftHit;
+
+        Vector3 rightWhiskerForward = Quaternion.AngleAxis(whiskerAngle, Vector3.up) * transform.forward;
+        Ray rightRay = new Ray(transform.position + Vector3.up * 0.5f + rightWhiskerForward * 0.8f, rightWhiskerForward);
+        RaycastHit rightHit;
+
+        // If the forward ray hits an obstacle
+        if (Physics.Raycast(ray, out forwardHit, lookAhead))
+        {
+            //Debug.Log(forwardHit.transform.name);
+            Vector3 hitNormal = forwardHit.normal;
+            Vector3 hitPos = forwardHit.point;
+            hitNormal.y = 0f;
+            hitPos.y = 0f;
+
+            Vector3 target;
+            if (Vector3.Dot(ray.direction, hitNormal) < 0.9f)
+            {
+                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(90.0f, Vector3.up) * ray.direction;
+            }
+            else
+            {
+                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(-90.0f, Vector3.up) * ray.direction;
+            }
+
+            target.y = 0f;
+
+            Debug.Log(target);
+
+            Vector3 toTargetPos = transform.position + new Vector3(0f, 0.5f, 0f);
+            Vector3 toTargetDir = target - transform.position;
+
+            Debug.DrawRay(toTargetPos, toTargetDir, Color.cyan, 1f);
+            Seek(target, weight);
+        }
+
+        // If the left ray hits an obstacle
+        if (Physics.Raycast(leftRay, out leftHit, lookAhead * 0.6f))
+        {
+            //Debug.Log(forwardHit.transform.name);
+            Vector3 hitNormal = leftHit.normal;
+            Vector3 hitPos = leftHit.point;
+            hitNormal.y = 0f;
+            hitPos.y = 0f;
+
+            Vector3 target;
+
+            if (Vector3.Dot(leftRay.direction, hitNormal) < 0.9f)
+            {
+                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(90.0f, Vector3.up) * leftRay.direction;
+            }
+            else
+            {
+                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(-90.0f, Vector3.up) * leftRay.direction;
+            }
+
+
+            target.y = 0f;
+
+            Debug.Log(target);
+
+            Vector3 toTargetPos = transform.position + new Vector3(0f, 0.5f, 0f);
+            Vector3 toTargetDir = target - transform.position;
+
+            Debug.DrawRay(leftRay.origin, leftRay.direction, Color.red, 1f);
+            Seek(target, weight);
+        }
+
+        // If the right ray hits an obstacle
+        else if (Physics.Raycast(rightRay, out rightHit, lookAhead * 0.6f))
+        {
+            //Debug.Log(forwardHit.transform.name);
+            Vector3 hitNormal = rightHit.normal;
+            Vector3 hitPos = rightHit.point;
+            hitNormal.y = 0f;
+            hitPos.y = 0f;
+
+            Vector3 target;
+
+            if (Vector3.Dot(ray.direction, hitNormal) < 0.9f)
+            {
+                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(-90.0f, Vector3.up) * rightRay.direction;
+            }
+            else
+            {
+                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(90.0f, Vector3.up) * rightRay.direction;
+            }
+
+
+            target.y = 0f;
+
+            Debug.Log(target);
+
+            Vector3 toTargetPos = transform.position + new Vector3(0f, 0.5f, 0f);
+            Vector3 toTargetDir = target - transform.position;
+
+            Debug.DrawRay(rightRay.origin, rightRay.direction, Color.red, 1f);
+            Seek(target, weight);
+        }
+
+
     }
 }
+
+
+
+
+        

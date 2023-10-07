@@ -4,13 +4,13 @@ using UnityEngine;
 
 [AddComponentMenu("AI/NPC Movement")]
 
-// Require SteeringOutput component for movement
-[RequireComponent (typeof(SteeringOutput))]
+// Require Steering component for movement
+[RequireComponent (typeof(Steering))]
 [RequireComponent (typeof (Rigidbody))]
 
 public class NPCMovement : MonoBehaviour
 {
-    SteeringOutput result;
+    Steering steering;
     Rigidbody rb;
 
     [SerializeField, Tooltip("Whether this NPC uses Dynamic or Kinematic steering algorithms")]
@@ -18,9 +18,9 @@ public class NPCMovement : MonoBehaviour
 
     private void Awake()
     {
-        if(!result)
+        if(!steering)
         {
-            result = GetComponent<SteeringOutput>();
+            steering = GetComponent<Steering>();
         }
         if (!rb)
         {
@@ -35,20 +35,20 @@ public class NPCMovement : MonoBehaviour
     {
         if (isKinematic)
         {
-            transform.position += result.velocity * Time.deltaTime;
-            transform.eulerAngles = new Vector3(0f, result.rotation, 0f);
+            transform.position += steering.output.velocity * Time.deltaTime;
+            transform.eulerAngles = new Vector3(0f, steering.output.rotation, 0f);
         }
         else
         {
             // slow velocity if decelerating
-            if(result.linearAcceleration.magnitude <= 0.001f)
+            if(steering.output.linearAcceleration.magnitude <= 0.001f)
             {
                 rb.velocity *= 0.95f;
             }
 
-            rb.AddForce(result.linearAcceleration, ForceMode.Acceleration);
+            rb.AddForce(steering.output.linearAcceleration, ForceMode.Acceleration);
 
-            transform.eulerAngles += new Vector3(0f, result.angularAcceleration * Time.deltaTime, 0f);
+            transform.eulerAngles += new Vector3(0f, steering.output.angularAcceleration * Time.deltaTime, 0f);
         }
     }
 }
