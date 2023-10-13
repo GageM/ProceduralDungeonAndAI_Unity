@@ -1,0 +1,38 @@
+﻿  {
+    "items": [
+      {
+        "name": "Test Item",
+        "maxStack":  1,
+        "type": 3,
+        "equipSlot": 2,
+        "value": 10,
+        "damage": 0,
+        "protection": 0
+      },
+      {
+        "name": "Iron Sword",
+        "maxStack":  1,
+        "type": 0,
+        "equipSlot": 5,
+        "value": 4,
+        "damage": 5
+      },
+      {
+        "name": "Healing Potion",
+        "maxStack": 5,
+        "type": 2,
+        "equipSlot": 0,
+        "value": 4,
+        "damage": -5
+      },
+      {
+        "name": "Iron Helmet",
+        "maxStack": 1,
+        "type": 1,
+        "equipSlot": 1,
+        "value": 4,
+        "damage": 0,
+        "protection": 10
+      }
+    ]
+  }

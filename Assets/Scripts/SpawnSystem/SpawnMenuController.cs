@@ -7,13 +7,13 @@ public class SpawnMenuController : MonoBehaviour
 {
     [SerializeField, Tooltip("The Spawn Menu Canvas")]
     GameObject spawnMenu;
-    Character playerCharacter;
+    PlayerController playerCharacter;
 
     // Start is called before the first frame update
     void Start()
     {
         spawnMenu.SetActive(false);
-        playerCharacter = GetComponent<Character>();
+        playerCharacter = GetComponent<PlayerController>();
     }
 
     // Update is called once per frame

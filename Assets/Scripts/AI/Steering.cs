@@ -559,8 +559,6 @@ public class Steering : MonoBehaviour
 
             target.y = 0f;
 
-            Debug.Log(target);
-
             Vector3 toTargetPos = transform.position + new Vector3(0f, 0.5f, 0f);
             Vector3 toTargetDir = target - transform.position;
 
@@ -591,8 +589,6 @@ public class Steering : MonoBehaviour
 
             target.y = 0f;
 
-            Debug.Log(target);
-
             Vector3 toTargetPos = transform.position + new Vector3(0f, 0.5f, 0f);
             Vector3 toTargetDir = target - transform.position;
 
@@ -622,8 +618,6 @@ public class Steering : MonoBehaviour
 
 
             target.y = 0f;
-
-            Debug.Log(target);
 
             Vector3 toTargetPos = transform.position + new Vector3(0f, 0.5f, 0f);
             Vector3 toTargetDir = target - transform.position;

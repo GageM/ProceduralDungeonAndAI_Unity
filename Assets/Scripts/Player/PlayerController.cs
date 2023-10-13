@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Collider))]
 [RequireComponent(typeof(Rigidbody))]
-public class Character : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     GameManager gameManager;
     Rigidbody rb;
@@ -17,10 +17,6 @@ public class Character : MonoBehaviour
 
     // Private actions for easy reference
     InputAction moveAction;
-    InputAction jumpAction;
-    InputAction interactAction;
-    InputAction sprintAction;
-    InputAction quitAction;
 
     [Header("Character Movement")]
     [SerializeField, Tooltip("How fast the character can Walk")]
@@ -61,19 +57,6 @@ public class Character : MonoBehaviour
     private void Awake()
     {
         gameManager = GameManager.Instance;
-
-        // Set up input actions
-        moveAction = controls.FindActionMap("MainControls").FindAction("Move");
-        jumpAction = controls.FindActionMap("MainControls").FindAction("Jump");
-        interactAction = controls.FindActionMap("MainControls").FindAction("Interact");
-        sprintAction = controls.FindActionMap("MainControls").FindAction("Sprint");
-        quitAction = controls.FindActionMap("MainControls").FindAction("Quit");
-
-        // Set the functions that each action calls
-        jumpAction.performed += Jump;
-        sprintAction.canceled += Sprint;
-        sprintAction.performed += Sprint;
-        quitAction.performed += Quit;
     }
 
     // Start is called before the first frame update
@@ -144,9 +127,6 @@ public class Character : MonoBehaviour
     {
         if (!disableInput)
         {
-            move.z = moveAction.ReadValue<Vector2>().y;
-            move.x = moveAction.ReadValue<Vector2>().x;
-
             Vector3 localMove = (transform.forward * move.z) + (transform.right * move.x);
 
             // Accelerate character
@@ -160,37 +140,64 @@ public class Character : MonoBehaviour
         }
     }
 
-    void Jump(InputAction.CallbackContext context)
+    public void Move(InputAction.CallbackContext context)
     {
-        if (isGrounded)
-        {
-            Debug.Log("Jumping");
+        move.x = context.ReadValue<Vector2>().x;
+        move.z = context.ReadValue<Vector2>().y;
+    }
 
-            rb.AddForce(transform.up * jumpHeight, ForceMode.Impulse);
+    public void Jump(InputAction.CallbackContext context)
+    {
+        if (!disableInput)
+        {
+            if (isGrounded)
+            {
+                Debug.Log("Jumping");
+
+                rb.AddForce(transform.up * jumpHeight, ForceMode.Impulse);
+            }
         }
     }
 
-    void Sprint(InputAction.CallbackContext context)
+    public void Sprint(InputAction.CallbackContext context)
     {
-        if(context.performed)
+        if (!disableInput)
         {
-            maxSpeed = maxRunSpeed;
-        }
-        if(context.canceled)
-        {
-            maxSpeed = maxWalkSpeed;
+            if (context.performed)
+            {
+                maxSpeed = maxRunSpeed;
+            }
+            if (context.canceled)
+            {
+                maxSpeed = maxWalkSpeed;
+            }
         }
     }
 
-    void Quit(InputAction.CallbackContext context)
+    public void Quit(InputAction.CallbackContext context)
     {
         gameManager.SetGameState(GameState.GameOver);
         Application.Quit();
     }
 
-    void Interact(InputAction.CallbackContext context)
+    public void Interact(InputAction.CallbackContext context)
     {
 
+    }
+
+    public void OpenInventory(InputAction.CallbackContext context)
+    {
+        disableInput = !disableInput;
+        if(disableInput)
+        {
+            Cursor.lockState = CursorLockMode.Confined;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
 }

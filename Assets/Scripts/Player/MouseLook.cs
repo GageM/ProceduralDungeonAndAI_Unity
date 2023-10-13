@@ -49,8 +49,6 @@ public class MouseLook : MonoBehaviour {
 	{
 		if (!disableInput)
 		{
-			look = lookAction.ReadValue<Vector2>();
-
 			if (axes == RotationAxes.MouseXAndY)
 			{
 				float rotationX = transform.localEulerAngles.y + look.x * sensitivityX;
@@ -85,4 +83,15 @@ public class MouseLook : MonoBehaviour {
 		if (GetComponent<Rigidbody>())
 			GetComponent<Rigidbody>().freezeRotation = true;
 	}
+
+	public void Look(InputAction.CallbackContext context)
+    {
+		Vector2 input = context.ReadValue<Vector2>();
+		look = input;
+    }
+
+	public void ToggleInput(InputAction.CallbackContext context)
+    {
+		disableInput = !disableInput;
+    }
 }
