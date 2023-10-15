@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 
@@ -11,12 +12,18 @@ public class PlayerController : MonoBehaviour
     GameManager gameManager;
     Rigidbody rb;
 
-    // Inputs
-    [Header("Inputs")]
-    public InputActionAsset controls;
+    float currentStamina;
+    public float CurrentStamina { 
+        get { return currentStamina; }
+        set { currentStamina = value; } 
+    }
 
-    // Private actions for easy reference
-    InputAction moveAction;
+    // Input Information
+
+    Vector3 move;
+    bool disableInput = false;
+
+    // Movement
 
     [Header("Character Movement")]
     [SerializeField, Tooltip("How fast the character can Walk")]
@@ -29,30 +36,32 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Tooltip("The speed at which the character jumps")]
     float jumpHeight;
 
-        [HideInInspector]
-    public float maxSpeed;
+    float maxSpeed;
 
-    public Vector3 move;
-
-    public bool disableInput = false;
+    bool isSprinting;
 
     [Header("Ground Checking")]
-    [SerializeField, Tooltip("Is the character on the ground")]
     bool isGrounded;
     [SerializeField, Tooltip("Ground Level")]
     Transform groundCheck;
     [SerializeField, Tooltip("Maximum distance from ground to be considered 'grounded'")]
     float groundCheckDistance;
 
-    [Header("Combat Stats")]
-    [SerializeField, Tooltip("The amount of health the player has")]
-    float health;
+    [Header("Interaction")]
+    [SerializeField]
+    float maxInteractionDistance = 10.0f;
+    Transform interactOrigin;
+    GameObject interactTarget;
 
-
-    // The Ground Layer is layer 3
-    //int groundLayerMask = 1 << 3;
-    // The Enemy Layer is Layer 6
-    //int enemyLayerMask = 1 << 6;
+    [Space(20)]
+    // Unity Events
+    [Header("Events")]
+    [SerializeField]
+    UnityEvent OnSprint = new();
+    [SerializeField]
+    UnityEvent OnJump  = new();
+    [SerializeField]
+    UnityEvent OnInteract = new();
 
     private void Awake()
     {
@@ -66,6 +75,11 @@ public class PlayerController : MonoBehaviour
         {
             rb = GetComponent<Rigidbody>();
             rb.constraints = RigidbodyConstraints.FreezeRotation;
+        }
+
+        if(!interactOrigin)
+        {
+            interactOrigin = transform.Find("SpringArm");
         }
 
         // Initialize unset variables
@@ -121,6 +135,7 @@ public class PlayerController : MonoBehaviour
 
             Debug.DrawRay(groundCheck.position, -groundCheck.up * groundCheckDistance, Color.cyan);
         }
+        CheckForInteractable();
     }
 
     void FixedUpdate()
@@ -152,8 +167,7 @@ public class PlayerController : MonoBehaviour
         {
             if (isGrounded)
             {
-                Debug.Log("Jumping");
-
+                OnJump.Invoke();
                 rb.AddForce(transform.up * jumpHeight, ForceMode.Impulse);
             }
         }
@@ -165,11 +179,22 @@ public class PlayerController : MonoBehaviour
         {
             if (context.performed)
             {
-                maxSpeed = maxRunSpeed;
+                if (currentStamina > 0)
+                {
+                    maxSpeed = maxRunSpeed;
+                    isSprinting = true;
+                    StartCoroutine(SprintUseStamina());
+                }
+                else
+                {
+                    maxSpeed = maxWalkSpeed;
+                    isSprinting = false;
+                }
             }
             if (context.canceled)
             {
                 maxSpeed = maxWalkSpeed;
+                isSprinting = false;
             }
         }
     }
@@ -182,7 +207,11 @@ public class PlayerController : MonoBehaviour
 
     public void Interact(InputAction.CallbackContext context)
     {
-
+        if(interactTarget.TryGetComponent(out I_Interactable interactable))
+        {
+            interactable.Interact();
+        }
+        OnInteract.Invoke();
     }
 
     public void OpenInventory(InputAction.CallbackContext context)
@@ -200,4 +229,27 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    IEnumerator SprintUseStamina()
+    {
+        OnSprint.Invoke();
+        while (isSprinting && currentStamina > 0.0f)
+        {
+            yield return new WaitForSeconds(0.05f);
+            OnSprint.Invoke();
+        }
+        isSprinting = false;
+        maxSpeed = maxWalkSpeed;
+        yield break;
+    }
+
+    void CheckForInteractable()
+    {
+        Ray interactRay = new Ray(interactOrigin.position, interactOrigin.forward);
+        RaycastHit hit;
+        if (Physics.Raycast(interactRay, out hit, maxInteractionDistance))
+        {
+            interactTarget = hit.transform.gameObject;
+        }
+        Debug.DrawRay(interactOrigin.position, interactOrigin.forward * maxInteractionDistance, Color.yellow);
+    }
 }

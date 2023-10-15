@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 
 
@@ -13,6 +14,7 @@ public class CyclicDungeon : MonoBehaviour
     int cycleCount = 3;
 
     // Lists Containing the Starts & Goals of each cycle
+    [SerializeField]
     List<Cycle> cycleList = new List<Cycle>();
 
     int RoomCount
@@ -55,13 +57,11 @@ public class CyclicDungeon : MonoBehaviour
 
     void CycleGen(int recursion)
     {
-        Random.InitState(System.DateTime.Now.Millisecond * (recursion + 2));
-        int rand1 = Random.Range(0, RoomCount);
-        Debug.Log(rand1);
+        UnityEngine.Random.InitState(System.DateTime.Now.Millisecond * (recursion + 2));
+        int rand1 = UnityEngine.Random.Range(0, RoomCount);
 
-        Random.InitState(System.DateTime.Now.Millisecond * rand1 * (recursion + 2));
-        int rand2 = Random.Range(0, RoomCount);
-        Debug.Log(rand2);
+        UnityEngine.Random.InitState(System.DateTime.Now.Millisecond * rand1 * (recursion + 2));
+        int rand2 = UnityEngine.Random.Range(0, RoomCount);
 
         // Ensure a cycle cannot start and end at the same room
         if(rand2 == rand1)
@@ -78,10 +78,10 @@ public class CyclicDungeon : MonoBehaviour
         // Mark Start & Goal Rooms as such
         rooms[rand1].type.Add(RoomType.CYCLE_START);
         rooms[rand1].type.Add(RoomType.CYCLE_GOAL);
-        Debug.Log("Cycle Start Room: " + cycleList[recursion].cycleStart + ", Cycle Goal Room: " + cycleList[recursion].cycleGoal);
     }
 }
 
+[Serializable]
 public class Room
 {
     public CycleTheme theme;
@@ -90,6 +90,7 @@ public class Room
     public Room() { }
 }
 
+[Serializable]
 public class Cycle
 {
     public int cycleStart;

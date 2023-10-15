@@ -19,6 +19,9 @@ public class Item
     {
         Debug.Log("Name: " + name + ", Type: " + type + ", Slot: " + equipSlot + ", Value: " + value + ", Damage: " + damage + ", Protection: " + protection + ", Damage Type: " + damageType);
     }
+
+    public void Drop() { }
+    public void PickUp() { }
 }
 
 [Serializable]

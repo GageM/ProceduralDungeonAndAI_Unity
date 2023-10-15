@@ -2,8 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Inventory : MonoBehaviour
+public class Inventory : MonoBehaviour, I_Interactable
 {
+    public bool canInteract = false;
 
     public List<InventorySlot> inventory;
 
@@ -90,4 +91,17 @@ public class Inventory : MonoBehaviour
             }
         }
     }
+
+    public void Interact()
+    {
+        if (canInteract)
+        {
+            Debug.Log(name + "Inventory:");
+            foreach (InventorySlot slot in inventory)
+            {
+                slot.item.Print();
+            }
+        }
+    }
+
 }

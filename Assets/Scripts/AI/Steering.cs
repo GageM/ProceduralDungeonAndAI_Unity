@@ -92,6 +92,9 @@ public class Steering : MonoBehaviour
     [SerializeField, Tooltip("The 'Whisker' angle")]
     float whiskerAngle = 90f;
 
+    [SerializeField, Tooltip("The Weighting of the Obstacle Avoidance Steering")]
+    float obstacleAvoidanceWeight = 3.0f;
+
     private void Awake()
     {
         results = new List<SteeringOutput>();
@@ -193,9 +196,12 @@ public class Steering : MonoBehaviour
     }
     public void CalculateOutput()
     {
+        float epsilon = 0.005f;
+
         float totalWeight = 0.0f;
         foreach (var result in results)
         {
+            DrawSteeringRay(result);
             totalWeight += result.weight;
         }
 
@@ -221,6 +227,9 @@ public class Steering : MonoBehaviour
     {
         SteeringOutput result = new SteeringOutput();
         result.weight = weight;
+
+
+
         if (isKinematic)
         {
             direction = targetPos - transform.position;
@@ -525,21 +534,26 @@ public class Steering : MonoBehaviour
         Avoid(targetPos, weight);
     }
 
-    public void ObstacleAvoidance(float weight = 3)
+    public void ObstacleAvoidance(float weight = 3f)
     {
-        Ray ray = new Ray(transform.position + Vector3.up * 0.5f + transform.forward * 0.8f, transform.forward);
+        Ray ray = new(transform.position + Vector3.up * 0.5f + transform.forward * 0.8f, transform.forward);
         RaycastHit forwardHit;
 
+        List<RaycastHit> hits = new();
+
         Vector3 leftWhiskerForward = Quaternion.AngleAxis(-whiskerAngle, Vector3.up) * transform.forward;
-        Ray leftRay = new Ray(transform.position + Vector3.up * 0.5f + leftWhiskerForward * 0.8f, leftWhiskerForward);
+        Ray leftRay = new(transform.position + Vector3.up * 0.5f + leftWhiskerForward * 0.8f, leftWhiskerForward);
         RaycastHit leftHit;
 
         Vector3 rightWhiskerForward = Quaternion.AngleAxis(whiskerAngle, Vector3.up) * transform.forward;
-        Ray rightRay = new Ray(transform.position + Vector3.up * 0.5f + rightWhiskerForward * 0.8f, rightWhiskerForward);
+        Ray rightRay = new(transform.position + Vector3.up * 0.5f + rightWhiskerForward * 0.8f, rightWhiskerForward);
         RaycastHit rightHit;
 
-        // If the forward ray hits an obstacle
-        if (Physics.Raycast(ray, out forwardHit, lookAhead))
+        List<Vector3> targets = new();
+
+
+        // Check if any of the three rays hit an obstacle
+        if (Physics.Raycast(ray, out forwardHit, lookAhead * Mathf.Sin(whiskerAngle * Mathf.Deg2Rad)))
         {
             //Debug.Log(forwardHit.transform.name);
             Vector3 hitNormal = forwardHit.normal;
@@ -547,27 +561,19 @@ public class Steering : MonoBehaviour
             hitNormal.y = 0f;
             hitPos.y = 0f;
 
+            hits.Add(forwardHit);
+
             Vector3 target;
-            if (Vector3.Dot(ray.direction, hitNormal) < 0.9f)
-            {
-                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(90.0f, Vector3.up) * ray.direction;
-            }
-            else
-            {
-                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(-90.0f, Vector3.up) * ray.direction;
-            }
+            target = hitPos + hitNormal * avoidDistance;
 
             target.y = 0f;
 
-            Vector3 toTargetPos = transform.position + new Vector3(0f, 0.5f, 0f);
-            Vector3 toTargetDir = target - transform.position;
+            targets.Add(target);
 
-            Debug.DrawRay(toTargetPos, toTargetDir, Color.cyan, 1f);
-            Seek(target, weight);
+            Debug.DrawRay(ray.origin, transform.forward * avoidDistance * Mathf.Sin(whiskerAngle * Mathf.Deg2Rad), Color.red);
         }
 
-        // If the left ray hits an obstacle
-        if (Physics.Raycast(leftRay, out leftHit, lookAhead * 0.6f))
+        if (Physics.Raycast(leftRay, out leftHit, lookAhead * Mathf.Sin(whiskerAngle * Mathf.Deg2Rad)))
         {
             //Debug.Log(forwardHit.transform.name);
             Vector3 hitNormal = leftHit.normal;
@@ -575,29 +581,22 @@ public class Steering : MonoBehaviour
             hitNormal.y = 0f;
             hitPos.y = 0f;
 
+            hits.Add(leftHit);
+
             Vector3 target;
 
-            if (Vector3.Dot(leftRay.direction, hitNormal) < 0.9f)
-            {
-                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(90.0f, Vector3.up) * leftRay.direction;
-            }
-            else
-            {
-                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(-90.0f, Vector3.up) * leftRay.direction;
-            }
+            target =  rightRay.origin + (leftHit.distance * rightWhiskerForward);
 
+            target += hitNormal * avoidDistance - transform.forward * avoidDistance;
 
             target.y = 0f;
 
-            Vector3 toTargetPos = transform.position + new Vector3(0f, 0.5f, 0f);
-            Vector3 toTargetDir = target - transform.position;
+            targets.Add(target);
 
-            Debug.DrawRay(leftRay.origin, leftRay.direction, Color.red, 1f);
-            Seek(target, weight);
+            Debug.DrawRay(leftRay.origin, leftWhiskerForward * avoidDistance * Mathf.Sin(whiskerAngle * Mathf.Deg2Rad), Color.red);
         }
 
-        // If the right ray hits an obstacle
-        else if (Physics.Raycast(rightRay, out rightHit, lookAhead * 0.6f))
+        else if (Physics.Raycast(rightRay, out rightHit, lookAhead * Mathf.Sin(whiskerAngle * Mathf.Deg2Rad)))
         {
             //Debug.Log(forwardHit.transform.name);
             Vector3 hitNormal = rightHit.normal;
@@ -605,28 +604,42 @@ public class Steering : MonoBehaviour
             hitNormal.y = 0f;
             hitPos.y = 0f;
 
+            hits.Add(rightHit);
+
             Vector3 target;
 
-            if (Vector3.Dot(ray.direction, hitNormal) < 0.9f)
-            {
-                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(-90.0f, Vector3.up) * rightRay.direction;
-            }
-            else
-            {
-                target = hitPos + hitNormal * avoidDistance + Quaternion.AngleAxis(90.0f, Vector3.up) * rightRay.direction;
-            }
+            target = leftRay.origin + (rightHit.distance * leftWhiskerForward);
 
+            target += hitNormal * avoidDistance - transform.forward * avoidDistance;
 
             target.y = 0f;
 
-            Vector3 toTargetPos = transform.position + new Vector3(0f, 0.5f, 0f);
-            Vector3 toTargetDir = target - transform.position;
+            targets.Add(target);
 
-            Debug.DrawRay(rightRay.origin, rightRay.direction, Color.red, 1f);
-            Seek(target, weight);
+            Debug.DrawRay(rightRay.origin, rightWhiskerForward * avoidDistance * Mathf.Sin(whiskerAngle * Mathf.Deg2Rad), Color.red);
         }
 
+        // If a ray hit an obstacle seek the average of targets
+        if(targets.Count > 0)
+        {
+            Vector3 seekTarget = targets[targets.Count - 1];
+            RaycastHit seekHit = hits[targets.Count - 1];
 
+
+            Seek(seekTarget, obstacleAvoidanceWeight / seekHit.distance);
+        }
+    }
+
+    void DrawSteeringRay(SteeringOutput result)
+    {
+        if (isKinematic)
+        {
+            Debug.DrawRay(transform.position, result.velocity * result.weight, Color.yellow);
+        }
+        else
+        {
+            Debug.DrawRay(transform.position, result.linearAcceleration * result.weight, Color.yellow);        
+        }
     }
 }
 
