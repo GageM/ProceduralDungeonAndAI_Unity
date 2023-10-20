@@ -23,7 +23,7 @@ public class CyclicDungeon : MonoBehaviour
     }
 
     // The graph that represents the flow of the dungeon
-    public Graph dungeonGraph;
+    public GraphList dungeonGraph;
 
     // Contains the room data for each room in the graph
     public List<Room> rooms;
@@ -32,6 +32,22 @@ public class CyclicDungeon : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log("GraphMatrix Test");
+        List<int> nodes = new List<int>() {0, 1, 2, 3, 4 };
+        GraphMat<int> matGraph = new GraphMat<int>(5);
+        matGraph.AddWeightedEdge(0, 1, 1.0f);
+        matGraph.AddWeightedEdge(0, 3, 1000.0f);
+        matGraph.AddWeightedEdge(1, 2, 1.0f);
+        matGraph.AddWeightedEdge(2, 3, 1.0f);
+        matGraph.AddWeightedEdge(3, 4, 1.0f);
+
+        List<int> path = matGraph.Dijkstra(0, 3);
+
+        foreach(var node in path)
+        {
+            Debug.Log(node);
+        }
+
         GenerateRooms();
         for(int i = 0; i < cycleCount; i++)
         {
@@ -47,7 +63,7 @@ public class CyclicDungeon : MonoBehaviour
 
     void GenerateRooms()
     {
-        dungeonGraph = new Graph(RoomCount);
+        dungeonGraph = new GraphList(RoomCount);
         rooms = new List<Room>();
         for(int i = 0; i < RoomCount; i++)
         {

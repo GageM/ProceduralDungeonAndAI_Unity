@@ -95,6 +95,10 @@ public class Steering : MonoBehaviour
     [SerializeField, Tooltip("The Weighting of the Obstacle Avoidance Steering")]
     float obstacleAvoidanceWeight = 3.0f;
 
+    [SerializeField, Tooltip("Controls How The Distance From An Object Weights Steering")]
+    float obstacleDistanceWeightMultiplier = 1.0f;
+
+
     private void Awake()
     {
         results = new List<SteeringOutput>();
@@ -194,9 +198,9 @@ public class Steering : MonoBehaviour
             }
         }
     }
+
     public void CalculateOutput()
     {
-        float epsilon = 0.005f;
 
         float totalWeight = 0.0f;
         foreach (var result in results)
@@ -365,22 +369,6 @@ public class Steering : MonoBehaviour
 
             // 
             result.linearAcceleration = targetVelocity - rb.velocity;
-        }
-        results.Add(result);
-    }
-
-    //TODO:: Work on Wander Algorithm
-    private void Wander()
-    {
-        SteeringOutput result = new SteeringOutput();
-        if (isKinematic)
-        {
-            result.velocity = new Vector3(Mathf.Cos(result.rotation), 0.0f, Mathf.Sin(result.rotation)) * maxSpeed;
-
-            Random.InitState((int)System.DateTime.Now.Ticks);
-            result.rotation = Random.Range(-1.0f, 1.0f) * maxRotation;
-
-            return;
         }
         results.Add(result);
     }
@@ -626,7 +614,7 @@ public class Steering : MonoBehaviour
             RaycastHit seekHit = hits[targets.Count - 1];
 
 
-            Seek(seekTarget, obstacleAvoidanceWeight / seekHit.distance);
+            Seek(seekTarget, obstacleAvoidanceWeight / (seekHit.distance * obstacleDistanceWeightMultiplier));
         }
     }
 
