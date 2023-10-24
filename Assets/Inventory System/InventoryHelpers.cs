@@ -27,14 +27,8 @@ public class Item
 [Serializable]
 public class InventorySlot
 {
-    public Item item;
+    public SO_Item item;
     public int count = 1;
-}
-
-[Serializable]
-public class ItemList
-{
-    public Item[] items;
 }
 
 // This enum contains all the item types in the game
@@ -67,15 +61,4 @@ public enum DamageType
     DECAY,
     HOLY
 }
-
-// Update Along With ItemList.json For Easy Inventory Management
-public enum ItemID
-{
-    TestItem,
-    IronSword,
-    HealingPotion,
-    IronHelmet
-
-}
-
 

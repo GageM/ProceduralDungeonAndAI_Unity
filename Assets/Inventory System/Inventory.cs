@@ -8,13 +8,11 @@ public class Inventory : MonoBehaviour, I_Interactable
 
     public List<InventorySlot> inventory;
 
-    public List<Item> equippedItems;
+    public List<SO_Item> equippedItems;
 
     // Start is called before the first frame update
     void Start()
     {
-        AddItem((int)ItemID.IronSword);
-        for(int i = 0; i < 5; i++) AddItem((int)ItemID.HealingPotion);
     }
 
     // Update is called once per frame
@@ -23,9 +21,8 @@ public class Inventory : MonoBehaviour, I_Interactable
         
     }
 
-    bool AddItem(int itemID)
+    bool AddItem(SO_Item item)
     {
-        Item item = ItemListLoader.Instance.itemList.items[itemID];
         InventorySlot newItem = new InventorySlot();
         newItem.item = item;
 
@@ -49,9 +46,8 @@ public class Inventory : MonoBehaviour, I_Interactable
         return true;
     }
 
-    void RemoveItem(int itemID)
+    void RemoveItem(SO_Item item)
     {
-        Item item = ItemListLoader.Instance.itemList.items[itemID];
         foreach (InventorySlot slot in inventory)
         {
             if(slot.item == item)
@@ -68,9 +64,8 @@ public class Inventory : MonoBehaviour, I_Interactable
         }
     }
 
-    void EquipItem(int itemID)
+    void EquipItem(SO_Item item)
     {
-        Item item = ItemListLoader.Instance.itemList.items[itemID];
         foreach (InventorySlot slot in inventory)
         {
             if(slot.item == item)
@@ -83,7 +78,7 @@ public class Inventory : MonoBehaviour, I_Interactable
 
     void UnequipItem(EquipSlot equipSlot)
     {
-        foreach(Item item in equippedItems)
+        foreach(SO_Item item in equippedItems)
         {
             if(item.equipSlot == equipSlot)
             {
@@ -99,7 +94,7 @@ public class Inventory : MonoBehaviour, I_Interactable
             Debug.Log(name + "Inventory:");
             foreach (InventorySlot slot in inventory)
             {
-                slot.item.Print();
+                Debug.Log(slot.item.name);
             }
         }
     }

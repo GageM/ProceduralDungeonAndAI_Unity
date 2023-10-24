@@ -8,6 +8,7 @@ public class UIInventoryMenu : MonoBehaviour
 {
     GameObject parent;
     Inventory inventory;
+    List<GameObject> inventorySlots;
 
     [SerializeField] Transform content;
 
@@ -17,6 +18,7 @@ public class UIInventoryMenu : MonoBehaviour
     {
         parent = transform.parent.gameObject;
         inventory = parent.GetComponent<Inventory>();
+        inventorySlots = new();
     }
 
     // Start is called before the first frame update
@@ -35,10 +37,11 @@ public class UIInventoryMenu : MonoBehaviour
     {
         // Refresh Inventory When Opened
 
-        foreach(RectTransform child in content)
+        foreach(GameObject slot in inventorySlots)
         {
-            Destroy(child.gameObject);
+            Destroy(slot);
         }
+        inventorySlots.Clear();
 
         PopulateInventoryUI();
     }
@@ -54,6 +57,13 @@ public class UIInventoryMenu : MonoBehaviour
     void AddInventoryItem(InventorySlot slot)
     {
         GameObject invSlot = Instantiate(invSlotPrefab, content);
-        invSlot.GetComponentInChildren<TextMeshProUGUI>().text = slot.item.name;
+        inventorySlots.Add(invSlot);
+        foreach(var text in invSlot.GetComponentsInChildren<TextMeshProUGUI>())     
+        {
+            if (text.name == "Text-ItemName") text.text = slot.item.name;
+            if (text.name == "Text-ItemType") text.text = slot.item.type.ToString();
+            if (text.name == "Text-ItemCount") text.text = slot.count.ToString();
+            if (text.name == "Text-ItemValue") text.text = slot.item.value.ToString();
+        }
     }
 }

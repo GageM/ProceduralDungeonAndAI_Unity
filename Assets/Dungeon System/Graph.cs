@@ -364,3 +364,8 @@ public struct GraphMat<T>
     }
 }
 
+public struct Node
+{
+
+}
+
