@@ -24,6 +24,8 @@ public class InventoryUIController : MonoBehaviour
         slots = new();
         inventory = GetComponentInParent<Inventory>();
         canvas.gameObject.SetActive(false);
+        UpdateInventory();
+        inventory.OnInventoryUpdated.AddListener(UpdateInventory);
     }
 
     // Update is called once per frame
@@ -38,19 +40,10 @@ public class InventoryUIController : MonoBehaviour
 
         if (isInventoryOpen)
         {
-            foreach(var slot in inventory.inventory)
-            {
-                InitializeSlot(slot);
-            }
             canvas.gameObject.SetActive(true);
         }
         else
         {
-            foreach(GameObject slot in slots)
-            {
-                Destroy(slot);
-            }
-            slots.Clear();
             canvas.gameObject.SetActive(false);
         }
     }
@@ -65,6 +58,20 @@ public class InventoryUIController : MonoBehaviour
             if (child.name == "Text_ItemCount") child.text = slot.count.ToString();
             if (child.name == "Text_ItemType") child.text = slot.item.type.ToString();
             if (child.name == "Text_ItemValue") child.text = slot.item.value.ToString();
+        }
+    }
+
+    public void UpdateInventory()
+    {
+        foreach (GameObject slot in slots)
+        {
+            Destroy(slot);
+        }
+        slots.Clear();
+
+        foreach (var slot in inventory.inventory)
+        {
+            InitializeSlot(slot);
         }
     }
 }

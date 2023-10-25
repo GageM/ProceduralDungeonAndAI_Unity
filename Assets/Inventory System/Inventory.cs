@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Inventory : MonoBehaviour, I_Interactable
 {
@@ -9,6 +10,12 @@ public class Inventory : MonoBehaviour, I_Interactable
     public List<InventorySlot> inventory;
 
     public List<SO_Item> equippedItems;
+
+    // Events
+
+    [Header("Events")]
+    [SerializeField]
+    public UnityEvent OnInventoryUpdated;
 
     // Start is called before the first frame update
     void Start()
@@ -43,6 +50,8 @@ public class Inventory : MonoBehaviour, I_Interactable
         }
 
         inventory.Add(newItem);
+
+        OnInventoryUpdated.Invoke();
         return true;
     }
 
@@ -62,6 +71,8 @@ public class Inventory : MonoBehaviour, I_Interactable
                 }
             }
         }
+
+        OnInventoryUpdated.Invoke();
     }
 
     void EquipItem(SO_Item item)

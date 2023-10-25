@@ -2,57 +2,50 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-
-
-
+using Random = UnityEngine.Random;
 
 public class CyclicDungeon : MonoBehaviour
 {
-    int roomCountX = 5;
-    int roomCountY = 5;
-
-    int cycleCount = 3;
-
-    // Lists Containing the Starts & Goals of each cycle
-    [SerializeField]
-    List<Cycle> cycleList = new List<Cycle>();
-
+    public int roomCountX = 5;
+    public int roomCountY = 5;
     int RoomCount
     {
         get { return roomCountX * roomCountY; }
     }
 
+    List<int> usableRooms = new();
+
+    public int cycleCount = 3;
+
+    public int maxSubCycles = 2;
+
+    public List<GameObject> roomPlaceHolders;
+
+    public Material cycleStartMat;
+    public Material cycleGoalMat;
+
+    // Lists Containing the Starts & Goals of each cycle
+    [SerializeField]
+    List<Cycle> cycles;
+
+
+
     // The graph that represents the flow of the dungeon
-    public GraphList dungeonGraph;
-
-    // Contains the room data for each room in the graph
-    public List<Room> rooms;
-
+    public GraphMat<Room> dungeonGraph;
 
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("GraphMatrix Test");
-        List<int> nodes = new List<int>() {0, 1, 2, 3, 4 };
-        GraphMat<int> matGraph = new GraphMat<int>(5);
-        matGraph.AddWeightedEdge(0, 1, 1.0f);
-        matGraph.AddWeightedEdge(0, 3, 1000.0f);
-        matGraph.AddWeightedEdge(1, 2, 1.0f);
-        matGraph.AddWeightedEdge(2, 3, 1.0f);
-        matGraph.AddWeightedEdge(3, 4, 1.0f);
-
-        List<int> path = matGraph.Dijkstra(0, 3);
-
-        foreach(var node in path)
+        // Generate a list of indices that can be used to determine important rooms
+        for(int i = 0; i < RoomCount; i++)
         {
-            Debug.Log(node);
+            usableRooms.Add(i);
         }
+        FisherYatesShuffle(usableRooms);
 
-        GenerateRooms();
-        for(int i = 0; i < cycleCount; i++)
-        {
-            CycleGen(i);
-        }
+        InitializeGraph();
+
+        GenerateCycle(maxSubCycles);
     }
 
     // Update is called once per frame
@@ -61,49 +54,114 @@ public class CyclicDungeon : MonoBehaviour
 
     }
 
-    void GenerateRooms()
+    void GenerateCycle(int it, Cycle parent = null)
     {
-        dungeonGraph = new GraphList(RoomCount);
-        rooms = new List<Room>();
-        for(int i = 0; i < RoomCount; i++)
+        if (it > -1)
         {
-            rooms.Add(new Room());
-        }        
+            cycles = new List<Cycle>(cycleCount);
+
+            Cycle cycle = new();
+
+            // Create a new cycle 
+            cycles.Add(cycle);
+
+            cycle.parent = parent;
+
+            // Decide whether the cycle is critical to complete the game
+            // The main cycle is always critical
+            if (it == maxSubCycles)
+            {
+                cycle.isCritical = true;
+            }
+            else
+            {
+                // Randomly set the cycle as critical
+                cycle.isCritical = Random.value < 0.5;
+            }
+
+            // Set a random cycle type
+            cycle.type = (CycleType)Random.Range(0, 12);
+
+            SetUpRoomConnections(cycle);
+
+            for (int i = 0; i < it; i++)
+            {
+                GenerateCycle(it - 1, cycle);
+            }
+        }
     }
 
-    void CycleGen(int recursion)
+    void InitializeGraph()
     {
-        UnityEngine.Random.InitState(System.DateTime.Now.Millisecond * (recursion + 2));
-        int rand1 = UnityEngine.Random.Range(0, RoomCount);
-
-        UnityEngine.Random.InitState(System.DateTime.Now.Millisecond * rand1 * (recursion + 2));
-        int rand2 = UnityEngine.Random.Range(0, RoomCount);
-
-        // Ensure a cycle cannot start and end at the same room
-        if(rand2 == rand1)
+        // Initialize The Rooms
+        List<Room> rooms = new(RoomCount);
+        for (int i = 0; i < roomCountY; i++)
         {
-            if (rand2 == (RoomCount - 1)) rand2 -= 1;
-            else rand2 += 1;
+            for (int j = 0; j < roomCountX; j++)
+            {
+                rooms.Add(new Room());
+            }
         }
 
-        cycleList.Add(new Cycle());
+        // Set the Positions of the rooms
+        for (int i = 0; i < rooms.Count; i++)
+        {
+            rooms[i].position.x = i % roomCountX;
+            rooms[i].position.z = i / roomCountY;
 
-        cycleList[recursion].cycleStart = rand1;
-        cycleList[recursion].cycleGoal = rand2;
+            GameObject instance = Instantiate(roomPlaceHolders[0]);
+            instance.transform.position = rooms[i].position;
+            rooms[i].instance = instance;
+        }
 
-        // Mark Start & Goal Rooms as such
-        rooms[rand1].type.Add(RoomType.CYCLE_START);
-        rooms[rand1].type.Add(RoomType.CYCLE_GOAL);
+        dungeonGraph = new(rooms);
     }
+
+    void SetUpRoomConnections(Cycle cycle)
+    {
+        if(cycle.parent != null)
+        {
+            cycle.cycleStart = usableRooms[0];
+            usableRooms.RemoveAt(0);
+
+        }
+        else
+        {
+            //cycle.cycleStart = cycle.parent.
+        }
+
+        cycle.cycleGoal = usableRooms[0];
+        usableRooms.RemoveAt(0);
+
+        dungeonGraph.nodes[cycle.cycleStart].instance.GetComponent<Renderer>().material = cycleStartMat;
+        dungeonGraph.nodes[cycle.cycleGoal].instance.GetComponent<Renderer>().material = cycleGoalMat;
+    }
+
+    void FisherYatesShuffle(List<int> toShuffle)
+    {
+        System.Random rand = new();
+
+        for(int i = toShuffle.Count - 1; i > 0; i--)
+        {
+            int j = rand.Next(0, i + 1);
+
+            int temp = toShuffle[i];
+            toShuffle[i] = toShuffle[j];
+            toShuffle[j] = temp;
+        }
+    }
+
 }
+
 
 [Serializable]
 public class Room
 {
+    public Vector3 position = Vector3.zero;
     public CycleTheme theme;
     public List<RoomType> type = new();
 
-    public Room() { }
+    public GameObject instance;
 }
 
 [Serializable]
@@ -112,6 +170,11 @@ public class Cycle
     public int cycleStart;
     public int cycleGoal;
 
+    public List<int> SubCycleInsertionPoints;
+
     public bool isCritical;
-    CycleType type;
+    public bool isSubCycle;
+    public CycleType type;
+
+    public Cycle parent;
 }

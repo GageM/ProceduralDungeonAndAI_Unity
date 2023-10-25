@@ -5,6 +5,7 @@ using System;
 
 
 // A Graph Structure Using An Adjacency List
+[Serializable]
 public struct GraphList
 {
     private int vertexCount;
@@ -117,6 +118,7 @@ public struct GraphList
 }
 
 // A Graph Structure Using An Adjacency Matrix
+[Serializable]
 public struct GraphMat<T>
 {
     private int vertexCount;
