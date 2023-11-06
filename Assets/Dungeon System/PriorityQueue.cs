@@ -40,18 +40,33 @@ public class PriorityQueue<T>
         }
     }
 
-    public T Dequeue()
+    // Dequeues the value with the highest weight
+    public T DequeueHighest()
     {
         // Get the last element of the queue and then remove it from the queue
         var val = queue[queue.Count - 1];
         queue.RemoveAt(queue.Count - 1);
-
         return val.value;
     }
 
-    public T Peek()
+    // Dequeues the value with the lowest weight
+    public T DequeueLowest()
+    {
+        // Get the last element of the queue and then remove it from the queue
+        var val = queue[0];
+        queue.RemoveAt(0);
+        return val.value;
+    }
+
+    public T PeekHighest()
     {
         var val = queue[queue.Count - 1];
+        return val.value;
+    }
+
+    public T PeekLowest()
+    {
+        var val = queue[0];
         return val.value;
     }
 }

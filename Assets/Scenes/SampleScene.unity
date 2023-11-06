@@ -2261,7 +2261,7 @@ Transform:
   m_GameObject: {fileID: 685829067}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.411, y: 1.057, z: 6.033}
+  m_LocalPosition: {x: -4, y: 1.057, z: 6.033}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2583,14 +2583,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 748f15fd2624f3449b40ae30db6c0bbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomCountX: 35
-  roomCountY: 35
+  roomCountX: 8
+  roomCountY: 8
   cycleCount: 3
+  mainCycleHalfSize: 12
   maxSubCycles: 2
+  emptyRoomChance: 0.06
   roomPlaceHolders:
   - {fileID: 3919354111426292570, guid: 616948e3d70c3724fa2ef7af6ae90d1d, type: 3}
   cycleStartMat: {fileID: 2100000, guid: 0cceed381164cab44adcd51ed03193dd, type: 2}
   cycleGoalMat: {fileID: 2100000, guid: 986289c327c85e14796ffb76e6c6209d, type: 2}
+  pathMat: {fileID: 2100000, guid: 37bfdb4dd31a3034092c56b4154031fe, type: 2}
+  pathGoalMat: {fileID: 2100000, guid: ef6cc0dc2b89bfb43b79932689f2fad5, type: 2}
+  emptyMat: {fileID: 2100000, guid: 169cdd42282b7844ba037a891a83142c, type: 2}
   cycles: []
   dungeonGraph:
     nodes: []
@@ -2674,7 +2679,7 @@ Transform:
   m_GameObject: {fileID: 976778310}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 6}
+  m_LocalPosition: {x: -3, y: 1, z: 6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

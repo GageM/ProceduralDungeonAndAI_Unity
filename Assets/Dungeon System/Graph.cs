@@ -178,19 +178,62 @@ public struct GraphMat<T>
         return nodes[index];
     }
 
-    public void AddEdge(int u, int v)
+    public float GetEdgeWeight(int from, int to)
     {
-        adjMatrix[u, v] = 1;
+        return adjMatrix[from, to];
     }
 
-    public void AddWeightedEdge(int u, int v, float weight)
+    public List<int> GetNeighbors(int start)
     {
-        adjMatrix[u, v] = weight;
+        List<int> neighbors = new();
+        for(int i = 0; i < vertexCount; i++)
+        {
+            if (adjMatrix[start, i] > 0.0f) 
+                neighbors.Add(i);
+        }
+        return neighbors;
     }
 
-    public void RemoveEdge(int u, int v)
+    public void AddEdge(int from, int to)
     {
-        adjMatrix[u, v] = 0;
+        adjMatrix[from, to] = 1;
+    }
+
+    public void AddWeightedEdge(int from, int to, float weight)
+    {
+        adjMatrix[from, to] = weight;
+    }
+
+    public void RemoveEdge(int from, int to)
+    {
+        adjMatrix[from, to] = 0;
+    }
+
+    public void RemoveEdgesFromNode(int u)
+    {
+        for (int i = 0; i < vertexCount; i++)
+        {
+            RemoveEdge(u, i);
+        }
+    }
+
+    public void RemoveEdgesToNode(int u)
+    {
+        for(int i = 0; i < vertexCount; i++)
+        {
+            RemoveEdge(i, u);
+        }
+    }
+
+    public void RemoveAllEdges()
+    {
+        for (int i = 0; i < vertexCount; i++)
+        {
+            for (int j = 0; j < vertexCount; j++)
+            {
+                RemoveEdge(i, j);
+            }
+        }
     }
 
     // Prints All Nodes By BFS
@@ -225,7 +268,6 @@ public struct GraphMat<T>
             }
             Debug.Log(s);
         }
-
     }
 
     public List<int> Dijkstra(int start, int goal)
@@ -243,126 +285,54 @@ public struct GraphMat<T>
 
         while(frontier.get.Count > 0)
         {
-            int current = frontier.Dequeue();
-            //if (current == goal) break;
+            int current = frontier.DequeueLowest();
+            Debug.Log(costSoFar[current]);
+            if (current == goal) break;
 
-            for(int i = 0; i < vertexCount; i++)
+            // Check Every Node For A Connection
+            foreach(int next in GetNeighbors(current))
             {
-                // Check For A Connection Between Nodes
-                if(adjMatrix[current, i] > 0)
+                if(adjMatrix[current, next] > 0)
                 {
-                    // The Cost Of The Next Node Is The Cost Of The Current Node + The Weight Of The Next Node
-                    float newCost = costSoFar[current] + adjMatrix[current, i];
-
-                    Debug.Log(current + " to " + i + ": " + newCost);
-
-                    // If There Is No Cost Associated With The Next Node
-                    if (!costSoFar.ContainsKey(i))
+                    float newCost = costSoFar[current] + GetEdgeWeight(current, next);
+                    if (!costSoFar.ContainsKey(next) || newCost < costSoFar[next])
                     {
-                        costSoFar[i] = newCost;
+                        costSoFar[next] = newCost;
                         float priority = newCost;
-                        frontier.Enqueue(i, priority);
-                        cameFrom[i] = current;
-                    }
-                    // If The Cost Of Moving To The Next Node is Lower Than From Another Previously Checked Node
-                    else if (newCost < costSoFar[i])
-                    {
-                        costSoFar[i] = newCost;
-                        float priority = newCost;
-                        frontier.Enqueue(i, priority);
-                        cameFrom[i] = current;
+                        frontier.Enqueue(next, priority);
+                        cameFrom[next] = current;
                     }
                 }
             }
         }
 
-        // A List that will house the path from the start node to the goal node
-        List<int> result = new();
-
-
-        // Trace The Path From The Goal To The Start
-        int nodeIterator = goal;
-        while(cameFrom[nodeIterator] != -1)
+        // Print the cost of reaching each node
+        foreach(var node in costSoFar.Keys)
         {
-            result.Add(nodeIterator);
-            nodeIterator = cameFrom[nodeIterator];
-        }
-
-        //Reverse the Result To Get The Path From The Start To The Goal
-        result.Reverse();
-
-        return result;
-    }
-
-    public List<int> AStar(int start, int goal)
-    {
-        PriorityQueue<int> frontier = new();
-        frontier.Enqueue(start, 0.0f);
-
-        // A Dictionary Containing The Node That Led To The Current Node
-        Dictionary<int, int> cameFrom = new Dictionary<int, int>();
-        cameFrom[start] = -1;
-
-        // A Dictionary Containing The Cost To Rech Each Node
-        Dictionary<int, float> costSoFar = new Dictionary<int, float>();
-        costSoFar[start] = 0.0f;
-
-        while (frontier.get.Count > 0)
-        {
-            int current = frontier.Dequeue();
-            //if (current == goal) break;
-
-            for (int i = 0; i < vertexCount; i++)
-            {
-                // Check For A Connection Between Nodes
-                if (adjMatrix[current, i] > 0)
-                {
-                    // The Cost Of The Next Node Is The Cost Of The Current Node + The Weight Of The Next Node
-                    float newCost = costSoFar[current] + adjMatrix[current, i];
-
-                    Debug.Log(current + " to " + i + ": " + newCost);
-
-                    // If There Is No Cost Associated With The Next Node
-                    if (!costSoFar.ContainsKey(i))
-                    {
-                        costSoFar[i] = newCost;
-                        float priority = newCost;
-                        frontier.Enqueue(i, priority);
-                        cameFrom[i] = current;
-                    }
-                    // If The Cost Of Moving To The Next Node is Lower Than From Another Previously Checked Node
-                    else if (newCost < costSoFar[i])
-                    {
-                        costSoFar[i] = newCost;
-                        float priority = newCost;
-                        frontier.Enqueue(i, priority);
-                        cameFrom[i] = current;
-                    }
-                }
-            }
+            Debug.Log("To Node: " + node + " Cost: " + costSoFar[node]);
         }
 
         // A List that will house the path from the start node to the goal node
         List<int> result = new();
 
-
         // Trace The Path From The Goal To The Start
         int nodeIterator = goal;
+
+        if (nodeIterator != -1 && !cameFrom.ContainsKey(nodeIterator))
+        {
+            Debug.Log("No Path Available");
+            return new();
+        }
+
         while (cameFrom[nodeIterator] != -1)
         {
             result.Add(nodeIterator);
             nodeIterator = cameFrom[nodeIterator];
         }
-
         //Reverse the Result To Get The Path From The Start To The Goal
         result.Reverse();
 
         return result;
-    }
-
-    float manhattanHeuristic(int a, float b)
-    {
-        return a * b;
     }
 }
 
