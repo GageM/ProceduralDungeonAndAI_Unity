@@ -18,8 +18,7 @@ public enum LookState
 {
     NONE = 0,
     LOOK_AT_TARGET,
-    LOOK_WHERE_MOVING,
-
+    LOOK_WHERE_MOVING
 }
 
 [AddComponentMenu("AI/Steering")]
@@ -114,32 +113,36 @@ public class Steering : MonoBehaviour
         }
     }
 
-    public void GetMovementSteering(MoveState moveState_, Transform target_)
+    public bool GetMovementSteering(MoveState moveState_, Transform target_)
     {
         // Controls The Movement Steering Of The NPC
         switch (moveState_)
         {
             case MoveState.SEEK:
                 Seek(target_.position);
+                return false;
                 break;
             case MoveState.FLEE:
                 Flee(target_.position);
+                return false;
                 break;
             case MoveState.ARRIVE:
-                Arrive(target_.position);
+                return Arrive(target_.position);
                 break;
             case MoveState.AVOID:
-                Avoid(target_.position);
+                return Avoid(target_.position);
                 break;
             case MoveState.PURSUE:
-                Pursue(target_);
+                return Pursue(target_);
                 break;
             case MoveState.EVADE:
-                Evade(target_);
+                return Evade(target_);
                 break;
             case MoveState.NONE:
+                return false;
                 break;
             default:
+                return false;
                 break;
         }
     }
@@ -269,7 +272,7 @@ public class Steering : MonoBehaviour
         results.Add(result);
     }
 
-    private void Arrive(Vector3 targetPos, float weight = 1.0f)
+    private bool Arrive(Vector3 targetPos, float weight = 1.0f)
     {
         SteeringOutput result = new SteeringOutput();
         result.weight = weight;
@@ -283,7 +286,7 @@ public class Steering : MonoBehaviour
                 result.velocity = Vector3.zero;
                 arrivedAtTarget = true;
                 results.Add(result);
-                return;
+                return true;
             }
 
             result.velocity = direction;
@@ -300,7 +303,7 @@ public class Steering : MonoBehaviour
                 result.linearAcceleration = Vector3.zero;
                 arrivedAtTarget = true;
                 results.Add(result);
-                return;
+                return true;
             }
 
             float targetSpeed;
@@ -319,9 +322,10 @@ public class Steering : MonoBehaviour
             result.linearAcceleration = targetVelocity - rb.velocity;
         }
         results.Add(result);
+        return false;
     }
 
-    private void Avoid(Vector3 targetPos, float weight = 1.0f)
+    private bool Avoid(Vector3 targetPos, float weight = 1.0f)
     {
         SteeringOutput result = new SteeringOutput();
         result.weight = weight;
@@ -334,7 +338,7 @@ public class Steering : MonoBehaviour
             {
                 result.velocity = Vector3.zero;
                 results.Add(result);
-                return;
+                return true;
             }
 
             result.velocity = direction;
@@ -351,7 +355,7 @@ public class Steering : MonoBehaviour
             {
                 result.linearAcceleration = Vector3.zero;
                 results.Add(result);
-                return;
+                return true;
             }
 
             float targetSpeed;
@@ -371,6 +375,7 @@ public class Steering : MonoBehaviour
             result.linearAcceleration = targetVelocity - rb.velocity;
         }
         results.Add(result);
+        return false;
     }
 
     private void MatchVelocity(Transform target_)
@@ -462,7 +467,7 @@ public class Steering : MonoBehaviour
         return;
     }
 
-    private void Pursue(Transform target_, float weight = 1)
+    private bool Pursue(Transform target_, float weight = 1)
     {
         targetRB = target_.GetComponent<Rigidbody>();
         Vector3 targetPos = target_.position;
@@ -489,10 +494,10 @@ public class Steering : MonoBehaviour
             targetPos += weight * (targetRB.velocity * prediction);
         }
 
-        Arrive(targetPos, weight);
+        return Arrive(targetPos, weight);
     }
 
-    private void Evade(Transform target_, float weight = 1)
+    private bool Evade(Transform target_, float weight = 1)
     {
         targetRB = target_.GetComponent<Rigidbody>();
         Vector3 targetPos = target_.position;
@@ -519,7 +524,7 @@ public class Steering : MonoBehaviour
             targetPos += weight * (targetRB.velocity * prediction);
         }
 
-        Avoid(targetPos, weight);
+        return Avoid(targetPos, weight);
     }
 
     public void ObstacleAvoidance(float weight = 3f)

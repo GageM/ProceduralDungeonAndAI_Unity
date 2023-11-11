@@ -7,6 +7,7 @@ using UnityEngine;
 [RequireComponent(typeof(Steering))]
 public class AIController : MonoBehaviour
 {
+    // Steering
     Steering steering;
 
     [SerializeField, Tooltip("A list of Steering Algorithms for each target in 'targets'")]
@@ -20,6 +21,29 @@ public class AIController : MonoBehaviour
 
     [SerializeField, Tooltip("The focus for 'lookAtTarget' steering")]
     Transform lookTarget;
+
+    // Pathfinding
+    [Header("Pathfinding")]
+    [SerializeField]
+    bool usePathfinding = false;
+
+    // A flag for if we have reached our goal
+    bool reachedGoal = true;
+
+    public bool foundPath = true;
+
+    [SerializeField]
+    public CyclicDungeon dungeon;
+
+    public List<int> path;
+
+    public int startRoom;
+
+    public int goalRoom;
+
+    public int currentTarget;
+
+    public Transform currentTargetTransform;
 
     // Start is called before the first frame update
     void Awake()
@@ -35,10 +59,58 @@ public class AIController : MonoBehaviour
     {
         steering.ClearResult();
         // Run the steering algorithms
-        for (int i = 0; i < moveStates.Count; i++)
+        
+        // Run default steering algorithms
+        if (!usePathfinding)
         {
-            steering.GetMovementSteering(moveStates[i], Movetargets[i]);
+            for (int i = 0; i < moveStates.Count; i++)
+            {
+                steering.GetMovementSteering(moveStates[i], Movetargets[i]);
+            }
         }
+        else
+        {
+            // Check if we have a path to follow
+            if (!foundPath)
+            {
+                path = Pathfinding.AStar(dungeon.dungeonGraph, dungeon.cycles[0].rooms[0], dungeon.cycles[0].rooms[dungeon.cycles[0].goalRoomIndex]);
+
+                if (path.Count > 0)
+                {
+                    // Get the first node along the path
+                    currentTarget = path[0];
+                    currentTargetTransform = dungeon.dungeonGraph.nodes[currentTarget].instance.transform;
+                }
+
+                foundPath = true;  
+                reachedGoal = false;
+            }
+
+            // Arrive at next node on the path
+            if (!reachedGoal && foundPath)
+            {
+                // Check if we have arrived at the next node on the path
+                if (steering.GetMovementSteering(MoveState.ARRIVE, currentTargetTransform))
+                {
+                    // Check if there is another node on the path to move to
+                    if (path.Count > 1)
+                    {
+                        path.RemoveAt(0);
+
+                        // Get the next node along the path
+                        currentTarget = path[0];
+                        currentTargetTransform = dungeon.dungeonGraph.nodes[currentTarget].instance.transform;
+                    }
+
+                    else
+                    {
+                        reachedGoal = true;
+                    }
+                }
+            }    
+        }
+
+
         steering.GetLookSteering(lookState, lookTarget.position);
         steering.ObstacleAvoidance();
         steering.CalculateOutput();
