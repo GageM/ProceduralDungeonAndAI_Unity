@@ -11,7 +11,7 @@ public class CyclicDungeon : MonoBehaviour
     public int roomCountX = 5;
     [SerializeField]
     public int roomCountY = 5;
-    int RoomCount
+    public int RoomCount
     {
         get { return roomCountX * roomCountY; }
     }
@@ -30,6 +30,12 @@ public class CyclicDungeon : MonoBehaviour
 
     [Header("Testing")]
     public List<GameObject> roomPlaceHolders;
+    public List<GameObject> oneWayRooms;
+    public List<GameObject> twoWayStraightRooms;
+    public List<GameObject> twoWayCornerRooms;
+    public List<GameObject> threeWayRooms;
+    public List<GameObject> fourWayRooms;
+
 
     public Vector3 roomTileSize = Vector3.one;
 
@@ -54,12 +60,16 @@ public class CyclicDungeon : MonoBehaviour
     // The graph that represents the flow of the dungeon
     public GraphMat<Room> dungeonGraph;
 
+    // This holds all the empty room spaces for interesting graph generation
+    List<int> emptyRooms;
+
     // Start is called before the first frame update
     void Start()
     {
         InitializeGraph();
         GenerateCycle();
         FinalizeGraph();
+        InstantiateRooms();
     }
 
     // Update is called once per frame
@@ -96,12 +106,16 @@ public class CyclicDungeon : MonoBehaviour
         // Set start room
         int start = Random.Range(0, RoomCount);
 
+        // Initialize the list of empty rooms
+        emptyRooms = new();
+
         //Remove random squares from valid moves to create interest
         for (int i = 0; i < RoomCount; i++)
         {
             if (Random.value < emptyRoomChance)
             {
-                dungeonGraph.GetNode(i).instance.GetComponent<Renderer>().material = emptyMat;
+                emptyRooms.Add(i);
+                //dungeonGraph.GetNode(i).instance.GetComponent<Renderer>().material = emptyMat;
                 
                 // Remove edges leading to empty space
                 dungeonGraph.RemoveEdgesToNode(i);
@@ -189,6 +203,12 @@ public class CyclicDungeon : MonoBehaviour
                     {
                         dungeonGraph.RemoveEdgesToNode(room);
                     }
+                }
+
+                // Maintain empty spaces when generating sub sycles
+                foreach(int space in emptyRooms)
+                {
+                    dungeonGraph.RemoveEdgesToNode(space);
                 }
 
                 GenerateSubCycle(shuffledRooms[0]);
@@ -343,13 +363,166 @@ public class CyclicDungeon : MonoBehaviour
             instance.name = "Room" + i.ToString();
             instance.GetComponent<Renderer>().material = defaultMat;
             instance.transform.position = rooms[i].position;
-            instance.transform.localScale = roomTileSize;
             rooms[i].instance = instance;
         }
 
         dungeonGraph = new(rooms);
 
         ConnectAllRooms();
+    }
+
+    // Instantiate all dungeon rooms
+    void InstantiateRooms()
+    {
+        for(int i = 0; i < RoomCount; i++)
+        {
+            // Get the neighboring rooms to each room
+            List<int> neighbors = dungeonGraph.GetNeighbors(i);
+
+            // Decide which prefab to instantiate and how it should be rotated
+            switch (neighbors.Count)
+            {
+                // The room is isolated
+                case 0:
+                    // Don't instantiate anything, this is a hole on the map
+                    break;
+
+                // The room is a dead end
+                case 1:
+                    {
+                        // Instantiate a room with one entrance pointed to the neighbor
+                        GameObject instance = Instantiate(oneWayRooms[0]);
+                        dungeonGraph.GetNode(i).instance = instance;
+                        instance.transform.position = dungeonGraph.GetNode(i).position;
+
+                        // Get the direction to the neighbor
+                        Vector3 dir = dungeonGraph.GetNode(neighbors[0]).position - dungeonGraph.GetNode(i).position;
+                        if (dir.x > 0)
+                        {
+                            instance.transform.rotation = Quaternion.AngleAxis(270, Vector3.up);
+                        }
+                        else if (dir.x < 0)
+                        {
+                            instance.transform.rotation = Quaternion.AngleAxis(90, Vector3.up);
+                        }
+                        else if (dir.z > 0)
+                        {
+                            instance.transform.rotation = Quaternion.AngleAxis(180, Vector3.up);
+                        }
+                        break;
+                    }
+                // The room is part of a corridor
+                case 2:
+                    {
+                        // Get the directions to neigboring rooms
+                        Vector3 dir0 = dungeonGraph.GetNode(neighbors[0]).position - dungeonGraph.GetNode(i).position;
+                        Vector3 dir1 = dungeonGraph.GetNode(neighbors[1]).position - dungeonGraph.GetNode(i).position;
+
+                        // Check whether neighbors are positioned on the same axis
+                        if (Mathf.Abs(dir0.x) == Mathf.Abs(dir1.x))
+                        {
+                            // Instantiate a straightaway
+                            GameObject instance = Instantiate(twoWayStraightRooms[0]);
+                            dungeonGraph.GetNode(i).instance = instance;
+                            instance.transform.position = dungeonGraph.GetNode(i).position;
+
+                            // Decide which axis to align the room to
+                            if (Mathf.Abs(dir0.z) < 1f)
+                            {
+                                // Align to the X axis
+                                instance.transform.rotation = Quaternion.AngleAxis(90, Vector3.up);
+                            }
+                        }
+                        else
+                        {
+                            // Instantiate a corner
+                            GameObject instance = Instantiate(twoWayCornerRooms[0]);
+                            dungeonGraph.GetNode(i).instance = instance;
+                            instance.transform.position = dungeonGraph.GetNode(i).position;
+
+                            // Decide the direction of the corner
+                            if(dir0.z > 0f || dir1.z > 0f)
+                            {
+                                // One room is in +Z dir
+                                if(dir0.x > 0f || dir1.x > 0f)
+                                {
+                                    // The other room is in +X dir
+                                    instance.transform.rotation = Quaternion.AngleAxis(270f, Vector3.up);
+                                }
+                                else
+                                {
+                                    // The other room is in -X dir
+                                    instance.transform.rotation = Quaternion.AngleAxis(180f, Vector3.up);
+                                }
+                            }
+                            else
+                            {
+                                // One room is in -Z dir
+                                if (dir0.x > 0f || dir1.x > 0f)
+                                {
+                                    // The other room is in +X dir
+                                }
+                                else
+                                {
+                                    // The other room is in -X dir
+                                    instance.transform.rotation = Quaternion.AngleAxis(90f, Vector3.up);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                // The room is a T junction
+                case 3:
+                    {
+                        // Get the directions to neigboring rooms
+                        Vector3 dir0 = dungeonGraph.GetNode(neighbors[0]).position - dungeonGraph.GetNode(i).position;
+                        Vector3 dir1 = dungeonGraph.GetNode(neighbors[1]).position - dungeonGraph.GetNode(i).position;
+                        Vector3 dir2 = dungeonGraph.GetNode(neighbors[2]).position - dungeonGraph.GetNode(i).position;
+
+                        // Instantiate a T junction 
+                        GameObject instance = Instantiate(threeWayRooms[0]);
+                        dungeonGraph.GetNode(i).instance = instance;
+                        instance.transform.position = dungeonGraph.GetNode(i).position;
+
+                        // The straight directions will cancel each other out leaving only the direction of the third door
+                        Vector3 dirSum = dir0 + dir1 + dir2;
+
+                        if (dirSum.z < 0f)
+                        {
+                            // 3rd door facing -Z
+                            instance.transform.rotation = Quaternion.AngleAxis(90f, Vector3.up);
+                        }
+                        else if (dirSum.x < 0f)
+                        {
+                            // 3rd door facing -X
+                            instance.transform.rotation = Quaternion.AngleAxis(180f, Vector3.up);
+                        }
+                        else if (dirSum.z > 0f)
+                        {
+                            // 3rd door facing +Z
+                            instance.transform.rotation = Quaternion.AngleAxis(270f, Vector3.up);
+                        }
+
+                        break;
+                    }
+                // The room is a 4 way junction
+                case 4:
+                    {
+                        // Instantiate a 4 way junction
+                        GameObject instance = Instantiate(fourWayRooms[0]);
+                        dungeonGraph.GetNode(i).instance = instance;
+                        instance.transform.position = dungeonGraph.GetNode(i).position;
+                        break;
+                    }
+                // The game has glitched... badly
+                default:
+                    // Don't instantiate anything
+                    // Should probably check how this happened
+                    Debug.Log("Room had more connections than physically possible");
+                    break;
+
+            }
+        }
     }
 
     // Creates connections between all adjacent rooms on the graph

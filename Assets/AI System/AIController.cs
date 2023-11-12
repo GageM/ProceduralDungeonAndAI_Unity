@@ -37,9 +37,11 @@ public class AIController : MonoBehaviour
 
     public List<int> path;
 
-    public int startRoom;
+    int startindex;
+    public GameObject start;
 
-    public int goalRoom;
+    int goalindex;
+    public GameObject goal;
 
     public int currentTarget;
 
@@ -73,7 +75,21 @@ public class AIController : MonoBehaviour
             // Check if we have a path to follow
             if (!foundPath)
             {
-                path = Pathfinding.AStar(dungeon.dungeonGraph, dungeon.cycles[0].rooms[0], dungeon.cycles[0].rooms[dungeon.cycles[0].goalRoomIndex]);
+                path.Clear();
+
+                for(int i = 0; i < dungeon.RoomCount; i++)
+                {
+                    if(start.transform.position == dungeon.dungeonGraph.GetNode(i).position)
+                    {
+                        startindex = i;
+                    }
+                    if (goal.transform.position == dungeon.dungeonGraph.GetNode(i).position)
+                    {
+                        goalindex = i;
+                    }
+                }
+
+                path = Pathfinding.AStar(dungeon.dungeonGraph, startindex, goalindex);
 
                 if (path.Count > 0)
                 {
@@ -89,23 +105,31 @@ public class AIController : MonoBehaviour
             // Arrive at next node on the path
             if (!reachedGoal && foundPath)
             {
-                // Check if we have arrived at the next node on the path
-                if (steering.GetMovementSteering(MoveState.ARRIVE, currentTargetTransform))
+                if(path.Count > 0)
                 {
-                    // Check if there is another node on the path to move to
-                    if (path.Count > 1)
+                    // Check if we have arrived at the next node on the path
+                    if (steering.GetMovementSteering(MoveState.ARRIVE, currentTargetTransform))
                     {
-                        path.RemoveAt(0);
+                        // Check if there is another node on the path to move to
+                        if (path.Count > 1)
+                        {
+                            path.RemoveAt(0);
 
-                        // Get the next node along the path
-                        currentTarget = path[0];
-                        currentTargetTransform = dungeon.dungeonGraph.nodes[currentTarget].instance.transform;
+                            // Get the next node along the path
+                            currentTarget = path[0];
+                            currentTargetTransform = dungeon.dungeonGraph.nodes[currentTarget].instance.transform;
+                        }
+
+                        else
+                        {
+                            reachedGoal = true;
+                        }
                     }
 
-                    else
-                    {
-                        reachedGoal = true;
-                    }
+                }
+                else
+                {
+                    reachedGoal = true;
                 }
             }    
         }

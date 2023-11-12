@@ -745,7 +745,7 @@ Transform:
   m_GameObject: {fileID: 246101088}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.36, z: 0}
   m_LocalScale: {x: 10, y: 1, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -931,8 +931,8 @@ MonoBehaviour:
   foundPath: 1
   dungeon: {fileID: 976778311}
   path: 
-  startRoom: 0
-  goalRoom: 0
+  start: {fileID: 0}
+  goal: {fileID: 0}
   currentTarget: 0
   currentTargetTransform: {fileID: 0}
 --- !u!114 &336639488
@@ -953,8 +953,8 @@ MonoBehaviour:
   maxAngularAcceleration: 360
   arrivedAtTarget: 0
   timeToTarget: 0.25
-  arriveTargetRadius: 2
-  arriveSlowRadius: 5
+  arriveTargetRadius: 1
+  arriveSlowRadius: 2
   avoidTargetRadius: 10
   avoidSlowRadius: 7
   alignTargetRadius: 10
@@ -999,7 +999,7 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 112
@@ -1047,7 +1047,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0cceed381164cab44adcd51ed03193dd, type: 2}
+  - {fileID: 2100000, guid: 2e3723ef41aa3a542a939cf439bdd1de, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2812,8 +2812,8 @@ MonoBehaviour:
   foundPath: 1
   dungeon: {fileID: 0}
   path: 
-  startRoom: 0
-  goalRoom: 0
+  start: {fileID: 0}
+  goal: {fileID: 0}
   currentTarget: 0
   currentTargetTransform: {fileID: 0}
 --- !u!1 &832575517
@@ -2937,11 +2937,21 @@ MonoBehaviour:
   roomCountY: 16
   mainCycleHalfSize: 12
   subCycleHalfSize: 6
-  maxSubCycles: 4
-  emptyRoomChance: 0.1
+  maxSubCycles: 3
+  emptyRoomChance: 0.06
   roomPlaceHolders:
   - {fileID: 3919354111426292570, guid: 616948e3d70c3724fa2ef7af6ae90d1d, type: 3}
-  roomTileSize: {x: 5, y: 1, z: 5}
+  oneWayRooms:
+  - {fileID: 702767390108335739, guid: 740ba2139ddb4bf4b8e8a9a12ccefdec, type: 3}
+  twoWayStraightRooms:
+  - {fileID: 702767390108335739, guid: 8a50f31407868854cbd59001a0607c16, type: 3}
+  twoWayCornerRooms:
+  - {fileID: 702767390108335739, guid: 9b4262df187903d43bb330f8ba2998b8, type: 3}
+  threeWayRooms:
+  - {fileID: 702767390108335739, guid: 3b5f065f4cc742d408e7308479cccf9a, type: 3}
+  fourWayRooms:
+  - {fileID: 702767390108335739, guid: 35041d74573cf7c4ebea87dfad5f6f15, type: 3}
+  roomTileSize: {x: 3, y: 1, z: 3}
   defaultMat: {fileID: 0}
   cycleStartMat: {fileID: 2100000, guid: 0cceed381164cab44adcd51ed03193dd, type: 2}
   cycleGoalMat: {fileID: 2100000, guid: 986289c327c85e14796ffb76e6c6209d, type: 2}
