@@ -2933,12 +2933,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 748f15fd2624f3449b40ae30db6c0bbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomCountX: 16
-  roomCountY: 16
-  mainCycleHalfSize: 12
-  subCycleHalfSize: 6
-  maxSubCycles: 3
-  emptyRoomChance: 0.06
+  roomCountX: 24
+  roomCountY: 24
+  mainCycleHalfSize: 18
+  subCycleHalfSize: 12
+  maxSubCycles: 4
+  emptyRoomChance: 0.2
   roomPlaceHolders:
   - {fileID: 3919354111426292570, guid: 616948e3d70c3724fa2ef7af6ae90d1d, type: 3}
   oneWayRooms:
@@ -2952,7 +2952,7 @@ MonoBehaviour:
   fourWayRooms:
   - {fileID: 702767390108335739, guid: 35041d74573cf7c4ebea87dfad5f6f15, type: 3}
   roomTileSize: {x: 3, y: 1, z: 3}
-  defaultMat: {fileID: 0}
+  defaultMat: {fileID: 2100000, guid: 2e3723ef41aa3a542a939cf439bdd1de, type: 2}
   cycleStartMat: {fileID: 2100000, guid: 0cceed381164cab44adcd51ed03193dd, type: 2}
   cycleGoalMat: {fileID: 2100000, guid: 986289c327c85e14796ffb76e6c6209d, type: 2}
   pathMat: {fileID: 2100000, guid: 37bfdb4dd31a3034092c56b4154031fe, type: 2}

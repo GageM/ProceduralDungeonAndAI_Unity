@@ -15,7 +15,7 @@ public class Pathfinding
         Dictionary<int, int> cameFrom = new Dictionary<int, int>();
         cameFrom[start] = -1;
 
-        // A Dictionary Containing The Cost To Rech Each Node
+        // A Dictionary Containing The Cost To Each Each Node
         Dictionary<int, float> costSoFar = new Dictionary<int, float>();
         costSoFar[start] = 0.0f;
 
@@ -46,7 +46,7 @@ public class Pathfinding
         // Catches no possible path issues
         if (nodeIterator != -1 && !cameFrom.ContainsKey(nodeIterator))
         {
-            Debug.Log("No Path Available");
+            //Debug.Log("No Path Available");
             return new();
         }
 

@@ -121,29 +121,21 @@ public class Steering : MonoBehaviour
             case MoveState.SEEK:
                 Seek(target_.position);
                 return false;
-                break;
             case MoveState.FLEE:
                 Flee(target_.position);
                 return false;
-                break;
             case MoveState.ARRIVE:
                 return Arrive(target_.position);
-                break;
             case MoveState.AVOID:
                 return Avoid(target_.position);
-                break;
             case MoveState.PURSUE:
                 return Pursue(target_);
-                break;
             case MoveState.EVADE:
                 return Evade(target_);
-                break;
             case MoveState.NONE:
                 return false;
-                break;
             default:
                 return false;
-                break;
         }
     }
 

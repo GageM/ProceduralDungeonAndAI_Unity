@@ -28,7 +28,7 @@ public class CyclicDungeon : MonoBehaviour
     [SerializeField]
     float emptyRoomChance = 0.1f;
 
-    [Header("Testing")]
+    [Header("Room Prefabs")]
     public List<GameObject> roomPlaceHolders;
     public List<GameObject> oneWayRooms;
     public List<GameObject> twoWayStraightRooms;
@@ -36,9 +36,10 @@ public class CyclicDungeon : MonoBehaviour
     public List<GameObject> threeWayRooms;
     public List<GameObject> fourWayRooms;
 
-
+    [Header("Tile Size")]
     public Vector3 roomTileSize = Vector3.one;
 
+    [Header("Materials")]
     public Material defaultMat;
     public Material cycleStartMat;
     public Material cycleGoalMat;
@@ -52,7 +53,7 @@ public class CyclicDungeon : MonoBehaviour
 
     public Material emptyMat;
 
-    [Header("Dungeon Values")]
+    [Header("Dungeon Data")]
     // Lists Containing the Starts & Goals of each cycle
     [SerializeField]
     public List<Cycle> cycles;
@@ -66,8 +67,22 @@ public class CyclicDungeon : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        InitializeGraph();
-        GenerateCycle();
+
+
+        // The cycle needs to generate correctly to have a game
+        for (int i = 0; i < 20; i++)
+        { 
+            Debug.Log("Generation Attempt: " + i.ToString());
+            InitializeGraph();
+            // Break the loop if we generate a cycle successfully
+            if (GenerateCycle()) break;
+            else
+            {
+                ClearGraphData();
+            }
+        }
+
+        // The final graph will change based on the cycle & room tags
         FinalizeGraph();
         InstantiateRooms();
     }
@@ -115,7 +130,7 @@ public class CyclicDungeon : MonoBehaviour
             if (Random.value < emptyRoomChance)
             {
                 emptyRooms.Add(i);
-                //dungeonGraph.GetNode(i).instance.GetComponent<Renderer>().material = emptyMat;
+                dungeonGraph.GetNode(i).instance.GetComponent<Renderer>().material = emptyMat;
                 
                 // Remove edges leading to empty space
                 dungeonGraph.RemoveEdgesToNode(i);
@@ -126,7 +141,7 @@ public class CyclicDungeon : MonoBehaviour
         List<int> path = RandomWalk(start, mainCycleHalfSize);
 
         //Set the cycle's rooms from the random walk
-        foreach(int i in path)
+        foreach (int i in path)
         {
             cycle.rooms.Add(i);
         }
@@ -134,7 +149,7 @@ public class CyclicDungeon : MonoBehaviour
         // Set goal room index
         cycle.goalRoomIndex = cycle.rooms.Count - 1;
 
-        Debug.Log("start: " + cycle.rooms[0] + " goal: " + cycle.rooms[cycle.goalRoomIndex]);
+        Debug.Log("Main Cycle: start: " + cycle.rooms[0] + " goal: " + cycle.rooms[cycle.goalRoomIndex]);
 
         // Create connections to the start room to allow pathfinding to return to it
         if (cycle.rooms.Count > 0) ConnectNeighborsToRoom(cycle.rooms[0]);
@@ -145,7 +160,6 @@ public class CyclicDungeon : MonoBehaviour
         // Catch broken cycles
         if (pathBack.Count == 0)
         {
-            Debug.Log("Need To Rebuild Dungeon Graph");
             return false;
         }
 
@@ -166,6 +180,12 @@ public class CyclicDungeon : MonoBehaviour
 
             // Draw the path from the goal back to the start
             dungeonGraph.GetNode(room).instance.GetComponent<Renderer>().material = pathGoalMat;
+        }
+
+        // Check if the cycle is long enough for interesting gameplay
+        if (cycle.rooms.Count < mainCycleHalfSize)
+        {
+            return false;
         }
 
         dungeonGraph.GetNode(cycle.rooms[0]).instance.GetComponent<Renderer>().material = cycleStartMat;
@@ -216,10 +236,13 @@ public class CyclicDungeon : MonoBehaviour
             }
         }
 
+        // Check if there are enough sub cycles for an interesting dungeon
+        if (cycles.Count < maxSubCycles) return false;
+
         return true;
     }
 
-    // Genderated the smaller cycles for the dungeons
+    // Generates the smaller cycles for the dungeons
     bool GenerateSubCycle(int subCycleStart)
     {
         Cycle cycle = new();
@@ -243,7 +266,7 @@ public class CyclicDungeon : MonoBehaviour
 
         if(path.Count < 2)
         {
-            Debug.Log("Can't generate path! Could not add cycle");
+            //Debug.Log("Can't generate path! Could not add cycle");
             return false;
         }
 
@@ -256,7 +279,7 @@ public class CyclicDungeon : MonoBehaviour
         // Set goal room index
         cycle.goalRoomIndex = cycle.rooms.Count - 1;
 
-        Debug.Log("start: " + cycle.rooms[0] + " goal: " + cycle.rooms[cycle.goalRoomIndex]);
+        Debug.Log("Sub Cycle: start: " + cycle.rooms[0] + " goal: " + cycle.rooms[cycle.goalRoomIndex]);
 
         // Create connections to the start room to allow pathfinding to return to it
         if(cycle.rooms.Count > 1) ConnectNeighborsToRoom(cycle.rooms[1]);
@@ -267,7 +290,6 @@ public class CyclicDungeon : MonoBehaviour
         // Catch broken cycles and do not add them to the level
         if (pathBack.Count < 1)
         {
-            Debug.Log("No return path! Could not add cycle");
             return false;
         }
 
@@ -276,7 +298,7 @@ public class CyclicDungeon : MonoBehaviour
         // Draw the path from the start to the goal
         foreach (int room in path)
         {
-            if(room != cycle.rooms[0])dungeonGraph.GetNode(room).instance.GetComponent<Renderer>().material = subCyclePathMat;
+            if(room != cycle.rooms[0]) dungeonGraph.GetNode(room).instance.GetComponent<Renderer>().material = subCyclePathMat;
         }
 
         // Add the return path to the cycle's room list to complete the cycle
@@ -304,6 +326,71 @@ public class CyclicDungeon : MonoBehaviour
         return true;
     }
 
+    void ClearGraphData()
+    {
+        for(int i = 0; i < RoomCount; i++)
+        {
+            Destroy(dungeonGraph.GetNode(i).instance);
+        }
+    }
+
+    // Adds tags to all of the rooms in the dungeon
+    // Tags are needed to generate items in rooms, locks & keys
+    void MarkRooms()
+    {
+        // Get each cycle
+        foreach(Cycle cycle in cycles)
+        {
+            // Add tags to start & end rooms in the cycle
+            dungeonGraph.GetNode(cycle.rooms[0]).type.Add(RoomType.CYCLE_START);
+            dungeonGraph.GetNode(cycle.rooms[cycle.goalRoomIndex]).type.Add(RoomType.CYCLE_GOAL);
+
+            // Get the cycle type to add cycle specific tags to rooms
+            switch(cycle.type)
+            {
+                case CycleType.ALTERED_RETURN:
+                    break;
+                case CycleType.BLOCKED_RETREAT:
+                    break;
+                case CycleType.DANGEROUS_ROUTE:
+                    break;
+                case CycleType.FALSE_GOAL:
+                    break;
+                case CycleType.FORESHADOW_LOOP:
+                    break;
+                case CycleType.GAMBIT:
+                    break;
+                case CycleType.HIDDEN_SHORTCUT:
+                    break;
+                case CycleType.LOCK_KEY:
+                    break;
+                case CycleType.MONSTER_PATROL:
+                    break;
+                case CycleType.SIMPLE_LOCK_KEY:
+                    break;
+                case CycleType.TWO_KEYS:
+                    break;
+                case CycleType.TWO_PATHS:
+                    break;
+            }
+
+
+            // Tag the room after each goal room as a treasure room
+
+        }
+
+        // Tag unused rooms as empty
+        for (int i = 1; i < RoomCount - 1; i++)
+        {
+            if(dungeonGraph.GetNeighbors(i).Count < 1)
+            {
+                dungeonGraph.GetNode(i).type.Add(RoomType.EMPTY_SPACE);
+            }
+        }
+
+       
+    }
+
     // Creates the final dungeon layout graph
     void FinalizeGraph()
     {
@@ -329,11 +416,15 @@ public class CyclicDungeon : MonoBehaviour
                 else if (cycle == cycles[0])
                 {
                     dungeonGraph.AddEdge(cycle.rooms[i], cycle.rooms[0]);
+
+                    dungeonGraph.AddEdge(cycle.rooms[0], cycle.rooms[i]);
                 }
                 // The first room in a subcycle is index 1
                 else
                 {
                     dungeonGraph.AddEdge(cycle.rooms[i], cycle.rooms[1]);
+
+                    dungeonGraph.AddEdge(cycle.rooms[1], cycle.rooms[i]);
                 }
 
             }
