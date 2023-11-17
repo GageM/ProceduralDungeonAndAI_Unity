@@ -9,7 +9,13 @@ public class SpringArm : MonoBehaviour
 
     Camera mainCam;
 
+    Transform parent;
+
     [SerializeField] bool useSpringArm;
+
+    [SerializeField] bool usePersistantViewAngle;
+
+    [SerializeField] Vector3 persistantViewAngle;
 
     [SerializeField, Tooltip("The Target Distance Between the Camera and the Player")]
     [Range(0, 20)] float targetDistance;
@@ -27,6 +33,7 @@ public class SpringArm : MonoBehaviour
     {
         mainCam = GetComponentInChildren<Camera>();
         cameraLayermask = ~(1 << LayerMask.GetMask("Player"));
+        parent = GetComponentInParent<Transform>();
     }
 
     private void OnDrawGizmos()
@@ -58,8 +65,24 @@ public class SpringArm : MonoBehaviour
         }
         else
         {
-            cameraPosition = transform.position - transform.forward * targetDistance;
+            if (usePersistantViewAngle)
+            {
+                if (parent)
+                {
+                    cameraPosition = transform.position - Quaternion.Euler(persistantViewAngle) * Quaternion.Inverse(parent.rotation) * transform.forward * targetDistance;
+                }
+                else
+                {
+                    cameraPosition = transform.position - Quaternion.Euler(persistantViewAngle) * transform.forward * targetDistance;
+                }
+            }
+            else
+            {
+                cameraPosition = transform.position - transform.forward * targetDistance;
+            }
         }
+
+
 
         mainCam.transform.position = cameraPosition;
 
