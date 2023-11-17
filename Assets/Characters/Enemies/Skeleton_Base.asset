@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 268d4118048739c44a742684e8269a3a, type: 3}
+  m_Name: Skeleton_Base
+  m_EditorClassIdentifier: 
+  maxHealth: 10
+  maxStamina: 25
+  healthRegenRate: 0
+  staminaRegenRate: 2
+  attackDamage: 4
+  attackSpeed: 1
+  idleAnimation: {fileID: 0}
+  deathAnimation: {fileID: 0}
+  attackAnimation: {fileID: 0}
+  characterModel: {fileID: 4807378906527954953, guid: 8c78a47f60bcba3449258f2f1232e9a5,
+    type: 3}

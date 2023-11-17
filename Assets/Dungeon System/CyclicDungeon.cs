@@ -28,6 +28,9 @@ public class CyclicDungeon : MonoBehaviour
     [SerializeField]
     float emptyRoomChance = 0.1f;
 
+    [Header("Scene Dependancies")]
+    public GameObject player;
+
     [Header("Room Prefabs")]
     public List<GameObject> roomPlaceHolders;
     public List<GameObject> oneWayRooms;
@@ -85,6 +88,8 @@ public class CyclicDungeon : MonoBehaviour
         // The final graph will change based on the cycle & room tags
         FinalizeGraph();
         InstantiateRooms();
+
+        BeginGame();
     }
 
     // Update is called once per frame
@@ -614,6 +619,13 @@ public class CyclicDungeon : MonoBehaviour
 
             }
         }
+    }
+
+    // Finalize everything to begin gameplay
+    void BeginGame()
+    {
+        // Place the player in the start room
+        player.transform.position = dungeonGraph.GetNode(cycles[0].rooms[0]).position + Vector3.up * 1.0f;
     }
 
     // Creates connections between all adjacent rooms on the graph

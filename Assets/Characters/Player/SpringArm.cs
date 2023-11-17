@@ -9,8 +9,10 @@ public class SpringArm : MonoBehaviour
 
     Camera mainCam;
 
+    [SerializeField] bool useSpringArm;
+
     [SerializeField, Tooltip("The Target Distance Between the Camera and the Player")]
-    [Range(0, 10)] float targetDistance;
+    [Range(0, 20)] float targetDistance;
 
     [SerializeField, Tooltip("The camera offset from any blocking objects")]
     [Range(0, 1)] float hitOffset;
@@ -47,10 +49,17 @@ public class SpringArm : MonoBehaviour
         targetCameraPosition = transform.position - transform.forward * targetDistance;
 
         Ray ray = new Ray(targetCameraPosition, transform.forward);
+
         bool blocked = Physics.SphereCast(ray, 0.1f, out var hit, targetDistance, layermask);
 
-
-        cameraPosition = blocked ? hit.point + transform.forward * hitOffset : transform.position - transform.forward * targetDistance;
+        if (useSpringArm)
+        {
+            cameraPosition = blocked ? hit.point + transform.forward * hitOffset : transform.position - transform.forward * targetDistance;
+        }
+        else
+        {
+            cameraPosition = transform.position - transform.forward * targetDistance;
+        }
 
         mainCam.transform.position = cameraPosition;
 

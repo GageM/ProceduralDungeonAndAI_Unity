@@ -9,26 +9,14 @@ public class Character : MonoBehaviour
     float currentHealth;
     float CurrentStamina;
 
-    [Header("Character Stats")]
-    [SerializeField, Tooltip("Max Health The Character Can Have")]
-    public float maxHealth;
-
-    [SerializeField, Tooltip("Max Stamina The Character Can Have")]
-    public float maxStamina;
-
-    [SerializeField, Tooltip("The Amount Of Health Restored Per Second")]
-    public float healthRegenRate;
-
-    [SerializeField, Tooltip("The Amount Of Stamina Restored Per Second When Not Sprinting")]
-    public float staminaRegenRate;
+    [Header("Character Preset")]
+    public SO_CharacterInfo characterInfo;
 
     [SerializeField, Tooltip("The Amount Of Stamina Used Per Second While Sprinting")]
     public float sprintStaminaUsage;
 
-    [SerializeField, Tooltip("Damage Weaknesses & Resistances. Higher Values Offer More Protection")]
-    public Dictionary<DamageType, float> damageTypeMultipliers;
+    GameObject model;
 
-    // Unity Events
     [Space(20)]
     [Header("Events")]
     [SerializeField, Tooltip("Initializes Health")]
@@ -43,6 +31,9 @@ public class Character : MonoBehaviour
     [SerializeField]
     UnityEvent OnDie = new();
 
+    [SerializeField]
+    UnityEvent OnAttack = new();
+
     [SerializeField, Tooltip("Passes Current Stamina")]
     UnityEvent<float> OnStaminaUsed = new();
 
@@ -50,6 +41,8 @@ public class Character : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // Spawn Character
+        SpawnCharacter();
         // Initialize Stats
         InitStats();
     }
@@ -60,10 +53,17 @@ public class Character : MonoBehaviour
         
     }
 
+    void SpawnCharacter()
+    {
+        model = Instantiate(characterInfo.characterModel, transform);
+    }
+
     void InitStats()
     {
-        currentHealth = maxHealth;
-        CurrentStamina = maxStamina;
+        // Set stats based on character info
+
+        currentHealth = characterInfo.maxHealth;
+        CurrentStamina = characterInfo.maxStamina;
         OnInitHealth.Invoke(currentHealth);
         OnTakeDamage.Invoke(currentHealth);
 
@@ -78,7 +78,7 @@ public class Character : MonoBehaviour
         if (type != DamageType.DEFAULT)
         {
             // Multiply Damage by Resistances & Weaknesses
-            foreach (KeyValuePair<DamageType, float> kvp in damageTypeMultipliers)
+            foreach (KeyValuePair<DamageType, float> kvp in characterInfo.damageTypeMultipliers)
             {
                 if (kvp.Key == type)
                 {
@@ -93,7 +93,7 @@ public class Character : MonoBehaviour
         if (currentHealth <= 0) Die();
 
         // This is needed for if this function is called to heal the character;
-        if (currentHealth > maxHealth) currentHealth = maxHealth;
+        if (currentHealth > characterInfo.maxHealth) currentHealth = characterInfo.maxHealth;
     }
 
     public void Die()
@@ -106,6 +106,12 @@ public class Character : MonoBehaviour
     {
         CurrentStamina -= staminaUsed * 0.05f;
         OnStaminaUsed.Invoke(CurrentStamina);
+    }
+
+    public void Attack()
+    {
+        OnAttack.Invoke();
+        // TODO:: Implement Attack
     }
 }
 

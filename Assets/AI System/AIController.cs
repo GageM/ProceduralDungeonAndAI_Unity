@@ -62,12 +62,20 @@ public class AIController : MonoBehaviour
         steering.ClearResult();
         // Run the steering algorithms
         
-        // Run default steering algorithms
+        // Run default steering algorithms if:
+            // Pathfinding is disabled, 
+
         if (!usePathfinding)
         {
-            for (int i = 0; i < moveStates.Count; i++)
+            // Check if:
+                // There are movestates in the list
+                // There is a target for every movestate
+            if (moveStates.Count > 0 && moveStates.Count == Movetargets.Count)
             {
-                steering.GetMovementSteering(moveStates[i], Movetargets[i]);
+                for (int i = 0; i < moveStates.Count; i++)
+                {
+                    steering.GetMovementSteering(moveStates[i], Movetargets[i]);
+                }
             }
         }
         else
@@ -134,8 +142,8 @@ public class AIController : MonoBehaviour
             }    
         }
 
+        steering.GetLookSteering(lookState, lookTarget);
 
-        steering.GetLookSteering(lookState, lookTarget.position);
         steering.ObstacleAvoidance();
         steering.CalculateOutput();
     }

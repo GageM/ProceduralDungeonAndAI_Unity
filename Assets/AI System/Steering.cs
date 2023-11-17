@@ -88,6 +88,9 @@ public class Steering : MonoBehaviour
     [SerializeField, Tooltip("Distance to check for obstacles")]
     float lookAhead = 5.0f;
 
+    [SerializeField, Tooltip("The Y position to check for obstacles")]
+    float whiskerHeight = 0.9f;
+
     [SerializeField, Tooltip("The 'Whisker' angle")]
     float whiskerAngle = 90f;
 
@@ -139,23 +142,29 @@ public class Steering : MonoBehaviour
         }
     }
 
-    public void GetLookSteering(LookState lookState_, Vector3 target_)
+    public void GetLookSteering(LookState lookState_, Transform target_)
     {
+        if (!target_)
+        {
+            LookWhereYouGo();
+            return;
+        }
+
         switch (lookState_)
         {
             case LookState.LOOK_WHERE_MOVING:
                 LookWhereYouGo();
-                break;
+                return;
 
             case LookState.LOOK_AT_TARGET:
-                LookAtTarget(target_);
-                break;
+                LookAtTarget(target_.position);
+                return;
 
             case LookState.NONE:
-                break;
+                return;
 
             default:
-                break;
+                return;
         }
     }
 
@@ -521,17 +530,17 @@ public class Steering : MonoBehaviour
 
     public void ObstacleAvoidance(float weight = 3f)
     {
-        Ray ray = new(transform.position + Vector3.up * 0.5f + transform.forward * 0.8f, transform.forward);
+        Ray ray = new(transform.position + Vector3.up * whiskerHeight + transform.forward * 0.8f, transform.forward);
         RaycastHit forwardHit;
 
         List<RaycastHit> hits = new();
 
         Vector3 leftWhiskerForward = Quaternion.AngleAxis(-whiskerAngle, Vector3.up) * transform.forward;
-        Ray leftRay = new(transform.position + Vector3.up * 0.5f + leftWhiskerForward * 0.8f, leftWhiskerForward);
+        Ray leftRay = new(transform.position + Vector3.up * whiskerHeight + leftWhiskerForward * 0.8f, leftWhiskerForward);
         RaycastHit leftHit;
 
         Vector3 rightWhiskerForward = Quaternion.AngleAxis(whiskerAngle, Vector3.up) * transform.forward;
-        Ray rightRay = new(transform.position + Vector3.up * 0.5f + rightWhiskerForward * 0.8f, rightWhiskerForward);
+        Ray rightRay = new(transform.position + Vector3.up * whiskerHeight + rightWhiskerForward * 0.8f, rightWhiskerForward);
         RaycastHit rightHit;
 
         List<Vector3> targets = new();

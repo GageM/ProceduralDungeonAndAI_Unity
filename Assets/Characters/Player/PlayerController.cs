@@ -9,7 +9,6 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
-    GameManager gameManager;
     Rigidbody rb;
 
     float currentStamina;
@@ -65,7 +64,7 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
-        gameManager = GameManager.Instance;
+
     }
 
     // Start is called before the first frame update
@@ -201,7 +200,6 @@ public class PlayerController : MonoBehaviour
 
     public void Quit(InputAction.CallbackContext context)
     {
-        gameManager.SetGameState(GameState.GameOver);
         Application.Quit();
     }
 
