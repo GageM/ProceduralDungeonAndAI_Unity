@@ -82,7 +82,7 @@ public class SpringArm : MonoBehaviour
             }
         }
 
-
+        //transform.position = player.position + offsetY * Vector3.up;
 
         mainCam.transform.position = cameraPosition;
 

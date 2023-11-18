@@ -9,7 +9,10 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
+
+    // Dependancies
     Rigidbody rb;
+    Camera mainCam;
 
     float currentStamina;
     public float CurrentStamina { 
@@ -21,6 +24,14 @@ public class PlayerController : MonoBehaviour
 
     Vector3 move;
     bool disableInput = false;
+
+    [Header("Movement Axes")]
+
+    [SerializeField, Tooltip("Whether movement will follow the local or gobal world axes")]
+    bool useCustomMovementAxes = false;
+
+    [SerializeField, Tooltip("The rotation away from global axes on the Y axis for movement")]
+    Vector3 CustomMovementAxes = Vector3.zero;
 
     // Movement
 
@@ -79,6 +90,11 @@ public class PlayerController : MonoBehaviour
         if(!interactOrigin)
         {
             interactOrigin = transform.Find("SpringArm");
+        }
+
+        if(!mainCam)
+        {
+            mainCam = Camera.main;
         }
 
         // Initialize unset variables
@@ -143,8 +159,19 @@ public class PlayerController : MonoBehaviour
         {
             Vector3 localMove = (transform.forward * move.z) + (transform.right * move.x);
 
+            Vector3 globalMove = (Vector3.forward * move.z) + (Vector3.right * move.x);
+            globalMove = Quaternion.Euler(CustomMovementAxes) * globalMove;
+
             // Accelerate character
-            rb.AddForce(localMove * maxAcceleration, ForceMode.Acceleration);
+            if(useCustomMovementAxes)
+            {
+                rb.AddForce(globalMove * maxAcceleration, ForceMode.Acceleration);
+            }
+            else
+            {
+                rb.AddForce(localMove * maxAcceleration, ForceMode.Acceleration);
+            }
+            
 
             // Clamp max speed
             if(rb.velocity.magnitude > maxSpeed)
@@ -158,6 +185,19 @@ public class PlayerController : MonoBehaviour
     {
         move.x = context.ReadValue<Vector2>().x;
         move.z = context.ReadValue<Vector2>().y;
+    }
+
+    public void MoveWithMouse(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            move.z = 1.0f;
+        }
+
+        if(context.canceled)
+        {
+            move.z = 0.0f;
+        }
     }
 
     public void Jump(InputAction.CallbackContext context)
@@ -205,7 +245,11 @@ public class PlayerController : MonoBehaviour
 
     public void Interact(InputAction.CallbackContext context)
     {
-        if(interactTarget.TryGetComponent(out I_Interactable interactable))
+        // Raycast to get mouse selection
+        CheckForInteractable();
+
+        // Interact with selection if it exists and can be interacted with
+        if(interactTarget && interactTarget.TryGetComponent(out I_Interactable interactable))
         {
             interactable.Interact();
         }
@@ -242,12 +286,21 @@ public class PlayerController : MonoBehaviour
 
     void CheckForInteractable()
     {
-        Ray interactRay = new Ray(interactOrigin.position, interactOrigin.forward);
+        // Get mouse cursor position
+        Vector3 mousePos = Mouse.current.position.ReadValue();
+        mousePos.z = mainCam.nearClipPlane;
+
+        Vector3 mouseWorld = mainCam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, mousePos.z));
+
         RaycastHit hit;
-        if (Physics.Raycast(interactRay, out hit, maxInteractionDistance))
+        Physics.Raycast(new Ray(mouseWorld, mainCam.transform.forward), out hit);
+
+        interactTarget = hit.transform.gameObject;
+
+        // Check if the target is close enough to be interacted with
+        if(Vector3.Magnitude(interactTarget.transform.position - transform.position) > maxInteractionDistance)
         {
-            interactTarget = hit.transform.gameObject;
+            interactTarget = null;
         }
-        Debug.DrawRay(interactOrigin.position, interactOrigin.forward * maxInteractionDistance, Color.yellow);
     }
 }
