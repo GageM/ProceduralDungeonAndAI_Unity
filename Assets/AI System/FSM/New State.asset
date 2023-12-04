@@ -9,7 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9cb3f1a465859dc43a9cee48ac23a353, type: 3}
-  m_Name: TestState
+  m_Script: {fileID: 11500000, guid: f257928595fdad3408ffe9e209bbd777, type: 3}
+  m_Name: New State
   m_EditorClassIdentifier: 
-  moveState: 4
+  transitions:
+  - {fileID: 0}
+  - {fileID: 0}
+  actions:
+  - {fileID: 0}

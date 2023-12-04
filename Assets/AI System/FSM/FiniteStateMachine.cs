@@ -4,10 +4,15 @@ using UnityEngine;
 
 public class FiniteStateMachine : MonoBehaviour
 {
+    [SerializeField]
+    public State initialState;
+    
+    State currentState;
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        currentState = initialState;
     }
 
     // Update is called once per frame
@@ -29,10 +34,6 @@ public class FiniteStateMachine : MonoBehaviour
             action.Act();
         }
     }
-
-    State currentState;
-
-    public List<State> states;
 }
 
 

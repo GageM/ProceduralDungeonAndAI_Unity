@@ -2,26 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface I_Condition
+public abstract class Condition : ScriptableObject
 {
-    public bool Test();
+    public abstract bool Test();
 }
 
-public class FloatCondition : I_Condition
+public class FloatCondition : Condition
 {
     float minValue;
     float maxValue;
 
     public float TestValue() { return minValue; }
 
-    public bool Test() { return (minValue <= TestValue() && TestValue() <= maxValue); }
+    public override bool Test() { return (minValue <= TestValue() && TestValue() <= maxValue); }
 }
 
-public class BoolCondition : I_Condition
+public class BoolCondition : Condition
 {
     bool value;
 
     public bool TestValue() { return value; }
 
-    public bool Test() { return TestValue() == value; }
+    public override bool Test() { return TestValue() == value; }
 }

@@ -73,6 +73,7 @@ public class AIController : MonoBehaviour
         // Run default steering algorithms if:
             // Pathfinding is disabled, 
 
+        /*
         if (!usePathfinding)
         {
             // Check if:
@@ -149,6 +150,7 @@ public class AIController : MonoBehaviour
                 }
             }    
         }
+        */
 
         steering.GetLookSteering(lookState, lookTarget);
 
