@@ -55,7 +55,10 @@ public class Character : MonoBehaviour
 
     void SpawnCharacter()
     {
-        model = Instantiate(characterInfo.characterModel, transform);
+        if (characterInfo.characterModel)
+        {
+            model = Instantiate(characterInfo.characterModel, transform);
+        }
     }
 
     void InitStats()

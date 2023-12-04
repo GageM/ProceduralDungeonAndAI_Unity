@@ -53,6 +53,8 @@ public class SpringArm : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        transform.position = player.transform.position;
+
         targetCameraPosition = transform.position - transform.forward * targetDistance;
 
         Ray ray = new Ray(targetCameraPosition, transform.forward);

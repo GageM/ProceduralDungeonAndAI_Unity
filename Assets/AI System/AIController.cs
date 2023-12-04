@@ -7,6 +7,9 @@ using UnityEngine;
 [RequireComponent(typeof(Steering))]
 public class AIController : MonoBehaviour
 {
+    // Decision Making
+    FiniteStateMachine stateMachine;
+
     // Steering
     Steering steering;
 
@@ -50,6 +53,11 @@ public class AIController : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
+        if(!stateMachine)
+        {
+            stateMachine = GetComponent<FiniteStateMachine>();
+        }
+
         if(!steering)
         {
             steering = GetComponent<Steering>();
