@@ -11,6 +11,6 @@ public class State : ScriptableObject
 
     public List<Action> actions;    
 
-    //public List<Action> entryActions;
-    //public List<Action> exitActions;
+    public List<Action> entryActions;
+    public List<Action> exitActions;
 }

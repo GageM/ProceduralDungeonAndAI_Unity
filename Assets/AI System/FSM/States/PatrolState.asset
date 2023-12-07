@@ -10,7 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f257928595fdad3408ffe9e209bbd777, type: 3}
-  m_Name: DoNothingState
+  m_Name: PatrolState
   m_EditorClassIdentifier: 
-  transitions: []
-  actions: []
+  transitions:
+  - {fileID: 11400000, guid: c59c1a3613d7ad44296498535586164b, type: 2}
+  actions:
+  - {fileID: 11400000, guid: 4312b3efc98a5554da73ff9b5a6ee067, type: 2}
+  entryActions: []
+  exitActions:
+  - {fileID: 11400000, guid: fdb2ecce57952bd4eb44ef07908df89d, type: 2}

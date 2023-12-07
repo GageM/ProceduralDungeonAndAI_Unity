@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f257928595fdad3408ffe9e209bbd777, type: 3}
+  m_Name: AvoidPlayerState
+  m_EditorClassIdentifier: 
+  transitions:
+  - {fileID: 11400000, guid: b6df9eb33ba1636428efe699f5495ef0, type: 2}
+  actions:
+  - {fileID: 11400000, guid: a38c1ec3305120947b052df121a1776c, type: 2}
+  entryActions: []
+  exitActions:
+  - {fileID: 11400000, guid: fdb2ecce57952bd4eb44ef07908df89d, type: 2}

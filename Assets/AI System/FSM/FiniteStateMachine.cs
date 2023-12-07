@@ -18,13 +18,13 @@ public class FiniteStateMachine : MonoBehaviour
     void Start()
     {
         // Do all entry actions for the initial state
-        //if (currentState.entryActions.Count > 0)
-        //{
-        //    foreach (var action in currentState.entryActions)
-        //    {
-        //        action.Act(this);
-        //    }
-        //}
+        if (currentState.entryActions.Count > 0)
+        {
+            foreach (var action in currentState.entryActions)
+            {
+                action.Act(this);
+            }
+        }
     }
 
 
@@ -64,25 +64,25 @@ public class FiniteStateMachine : MonoBehaviour
     void TransitionState(Transition transition)
     {
         // Do all exit actions before changing the state
-        //if (currentState.exitActions.Count > 0)
-        //{
-        //    foreach(var action in currentState.exitActions)
-        //    {
-        //        action.Act(this);
-        //    }
-        //}
+        if (currentState.exitActions.Count > 0)
+        {
+            foreach(var action in currentState.exitActions)
+            {
+                action.Act(this);
+            }
+        }
 
         // Transition to the next state
         currentState = transition.targetState;
 
         // Do all entry actions for the new state
-        //if (currentState.entryActions.Count > 0)
-        //{
-        //    foreach (var action in currentState.entryActions)
-        //    {
-        //        action.Act(this);
-        //    }
-        //}
+        if (currentState.entryActions.Count > 0)
+        {
+            foreach (var action in currentState.entryActions)
+            {
+                action.Act(this);
+            }
+        }
     }
 
     // A custom function that caches components returned by the base GetComponent function for use in FSM classes

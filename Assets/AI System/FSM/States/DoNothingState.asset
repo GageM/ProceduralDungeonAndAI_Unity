@@ -9,9 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: PlayerCloseDecision
-  m_EditorClassIdentifier: Assembly-CSharp::TaggedObjectDistance_Decision
-  min: 0
-  max: 10
-  tag: Player
+  m_Script: {fileID: 11500000, guid: f257928595fdad3408ffe9e209bbd777, type: 3}
+  m_Name: DoNothingState
+  m_EditorClassIdentifier: 
+  transitions: []
+  actions: []
+  entryActions: []
+  exitActions: []
