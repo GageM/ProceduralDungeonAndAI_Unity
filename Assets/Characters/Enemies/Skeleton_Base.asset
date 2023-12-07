@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 268d4118048739c44a742684e8269a3a, type: 3}
   m_Name: Skeleton_Base
   m_EditorClassIdentifier: 
-  maxHealth: 10
+  maxHealth: 35
   maxStamina: 25
   healthRegenRate: 0
   staminaRegenRate: 2

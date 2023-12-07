@@ -9,10 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f257928595fdad3408ffe9e209bbd777, type: 3}
-  m_Name: New State
+  m_Script: {fileID: 11500000, guid: cb2b410affe89f44c818c6cc282f491c, type: 3}
+  m_Name: ToDoNothing
   m_EditorClassIdentifier: 
-  transitions:
-  - {fileID: 11400000, guid: 5c557584e3a5c4241b2cb549f435ca78, type: 2}
-  actions:
-  - {fileID: 11400000, guid: fe02c8ccb87a7144694cde850a37f43c, type: 2}
+  targetState: {fileID: 11400000, guid: 005f1fa5151a0c446839b0a1ab086a09, type: 2}
+  decision: {fileID: 11400000, guid: 1da2d3d2e3799304188446067c4aab00, type: 2}

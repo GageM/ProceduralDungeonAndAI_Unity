@@ -10,9 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f257928595fdad3408ffe9e209bbd777, type: 3}
-  m_Name: New State
+  m_Name: DoNothingState
   m_EditorClassIdentifier: 
-  transitions:
-  - {fileID: 11400000, guid: 5c557584e3a5c4241b2cb549f435ca78, type: 2}
-  actions:
-  - {fileID: 11400000, guid: fe02c8ccb87a7144694cde850a37f43c, type: 2}
+  transitions: []
+  actions: []

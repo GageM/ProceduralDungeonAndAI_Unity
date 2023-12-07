@@ -10,4 +10,7 @@ public class State : ScriptableObject
     public List<Transition> transitions;
 
     public List<Action> actions;    
+
+    //public List<Action> entryActions;
+    //public List<Action> exitActions;
 }

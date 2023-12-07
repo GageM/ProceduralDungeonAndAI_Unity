@@ -4,38 +4,49 @@ using UnityEngine;
 using System;
 using Object = UnityEngine.Object;
 
-[CreateAssetMenu(menuName = "FSM/Action")]
 public abstract class Action : ScriptableObject
-{    
-    public abstract void Act();
+{
+    public abstract void Act(FiniteStateMachine stateMachine);
 }
 
-public class SimpleMove : Action
+[CreateAssetMenu(menuName = "FSM/Actions/Take Damage")]
+public class TakeDamage_Action : Action
 {
-    public MoveState moveState;
-    public Transform target;
+    public float damageAmount;
 
-    public override void Act()
+    public override void Act(FiniteStateMachine stateMachine)
     {
-        // Tell the ai controller to do this 
+        var character = stateMachine.GetComponent<Character>();
+
+        character.TakeDamage(damageAmount);
     }
 }
 
-public class Wait : Action
+
+[CreateAssetMenu(menuName = "FSM/Actions/Patrol")]
+public class Patrol_Action : Action
 {
-    public override void Act()
+    public override void Act(FiniteStateMachine stateMachine)
     {
-        // Do nothing until next state is triggered
+        var controller = stateMachine.GetComponent<AIController>();
+        Debug.Log(controller.ToString());
+
+        if (controller != null)
+        {
+            // check if the controller will steer to the next patrol target
+            if (!controller.moveTargets.ContainsKey(controller.patrolRoute[0]))
+            {
+                controller.AddSteeringTarget(MoveState.ARRIVE, controller.patrolRoute[0]);
+            }
+            else if (controller.targetSteeringComplete[controller.patrolRoute[0]])
+            {
+                controller.RemoveSteeringTarget(controller.patrolRoute[0]);
+
+                // Move the reached transform to the end of the patrol path
+                controller.patrolRoute.Add(controller.patrolRoute[0]);
+                controller.patrolRoute.RemoveAt(0);
+            }
+        }
     }
 }
 
-public class FollowPath : Action
-{
-    public List<Transform> path;
-    public bool loop;
-
-    public override void Act()
-    {
-        // Tell the ai controller to follow the path
-    }
-}

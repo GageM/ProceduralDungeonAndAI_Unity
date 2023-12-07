@@ -7,9 +7,11 @@ using Object = UnityEngine.Object;
 [CreateAssetMenu(menuName = "FSM/Transition")]
 public class Transition : ScriptableObject
 {
-    State targetState;
-    public State TargetState { get { return targetState; } }
+    public State targetState;
+    public Decision decision;
 
-    Condition condition;
-    public bool isTriggered() { return condition.Test(); }
+    public bool Test(FiniteStateMachine stateMachine) 
+    { 
+        return decision.Decide(stateMachine);
+    }
 }

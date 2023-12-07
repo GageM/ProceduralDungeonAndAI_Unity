@@ -7,7 +7,11 @@ public class Character : MonoBehaviour
 {
     // Character Stats
     float currentHealth;
-    float CurrentStamina;
+    float currentStamina;
+
+    // Getters for Stats
+    public float CurrentHealth { get { return currentHealth; } }
+    public float CurrentStamina { get { return currentStamina; } }
 
     [Header("Character Preset")]
     public SO_CharacterInfo characterInfo;
@@ -37,7 +41,6 @@ public class Character : MonoBehaviour
     [SerializeField, Tooltip("Passes Current Stamina")]
     UnityEvent<float> OnStaminaUsed = new();
 
-
     // Start is called before the first frame update
     void Start()
     {
@@ -66,12 +69,12 @@ public class Character : MonoBehaviour
         // Set stats based on character info
 
         currentHealth = characterInfo.maxHealth;
-        CurrentStamina = characterInfo.maxStamina;
+        currentStamina = characterInfo.maxStamina;
         OnInitHealth.Invoke(currentHealth);
         OnTakeDamage.Invoke(currentHealth);
 
-        OnInitStamina.Invoke(CurrentStamina);
-        OnStaminaUsed.Invoke(CurrentStamina);
+        OnInitStamina.Invoke(currentStamina);
+        OnStaminaUsed.Invoke(currentStamina);
     }
 
     public void TakeDamage(float damage, DamageType type = DamageType.DEFAULT)
@@ -107,8 +110,8 @@ public class Character : MonoBehaviour
 
     public void UseStamina(float staminaUsed)
     {
-        CurrentStamina -= staminaUsed * 0.05f;
-        OnStaminaUsed.Invoke(CurrentStamina);
+        currentStamina -= staminaUsed * 0.05f;
+        OnStaminaUsed.Invoke(currentStamina);
     }
 
     public void Attack()
