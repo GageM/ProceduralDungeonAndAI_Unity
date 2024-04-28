@@ -6,7 +6,7 @@ This is a project I created for my Artificial Intelligence course at Humber Coll
 - Tile-based procedural dungeon system based upon the techniques pioneered by Joris Dormans
   - Cyclic level generation with primary and secondary cycles
   - Uses random walk and A* algorithms on a graph to generate full cycles
-  - Uses the graph to place randomly chosen prefab rooms in the same configuration
+  - Uses the graph to place randomly chosen prefab rooms in the same configuration as the graph
 
 ## AI
 - Steering algorithms
